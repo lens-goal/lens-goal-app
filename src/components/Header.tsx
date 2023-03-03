@@ -9,24 +9,18 @@ export default function Header() {
     <>
       <div className={styles.headerContainer}>
         <div className={styles.left}>
-          <Link href="/goals/new-goal">New Goal</Link>
-          <Link href="/goals/friends-goals">Friends Goals</Link>
+          <Link href="/goals/new-goal">My Goals</Link>
+          <Link href="/goals/friends-goals">Frens' Goals</Link>
+          <Link href="/goals/group-goals">Group Goals</Link>
+          <Link href="/Evidence">Evidence</Link>
           <Link href={"/"}>
             <img src="/logo.png" alt="logo" className={styles.logo} />
           </Link>
 
-          <Link href={"/create"}>Create</Link>
+          {/* <Link href={"/create"}>Create</Link> */}
         </div>
 
         <div className={styles.right}>
-        {/* <Web3Button
-      contractAddress="0x99dD2B1A97683e43eE43f22025AFD9c4Ff84Afed"
-      action={async (contract) => {
-       console.log(await contract.call("getData"))
-      }}
-    >
-      Call
-    </Web3Button> */}
           <SignInButton />
         </div>
       </div>

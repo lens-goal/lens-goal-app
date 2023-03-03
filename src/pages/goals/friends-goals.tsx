@@ -3,6 +3,7 @@ import { MediaRenderer, useAddress } from "@thirdweb-dev/react";
 import {
   useFollowingQuery,
 } from "../../graphql/generated";
+import OracleHero from '../../components/OracleHero';
 // import styles from "../styles/Home.module.css";
 
 export type GoalStatus = 'complete' | 'voting' | 'ongoing'
@@ -40,11 +41,11 @@ export default function FriendsGoals
 
   return (
     <div>
-      <div>
+      <OracleHero/>
+      <div className='flex justify-center'>
         <button onClick={()=>setGoalStatus('complete')}>Complete</button>
         <button onClick={()=>setGoalStatus('voting')}>Voting</button>
         <button onClick={()=>setGoalStatus('ongoing')}>Ongoing</button>
-        {goalStatus}
       </div>
       {data?.following.items.map(({profile})=><div key={profile.ownedBy}>
         <div>{profile.handle}</div>
