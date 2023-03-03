@@ -42,12 +42,13 @@ export default function FriendsGoals
 
   return (
     <div>
-      <OracleHero/>
+      <div className='py-6'>
+        <OracleHero/>
+      </div>
       <div className='flex justify-center'>
         <Button text='Complete' cb={()=>setGoalStatus('complete')}></Button>
         <Button text='Voting' cb={()=>setGoalStatus('voting')}></Button>
         <Button text='Ongoing' cb={()=>setGoalStatus('ongoing')}></Button>
-        {goalStatus}
       </div>
       {data?.following.items.map(({profile})=><div key={profile.ownedBy}>
         <div>{profile.handle}</div>
