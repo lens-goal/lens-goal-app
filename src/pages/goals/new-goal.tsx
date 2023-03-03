@@ -7,6 +7,7 @@ export default function NewGoal() {
     initialValues: {
       description: '',
       verificationCriteria: '',
+      preProof: '',
       amount: 0,
       deadline: 0,
       token: '0x294210dDbC38114dD6EE4959B797A0D2171f220b',
@@ -39,6 +40,16 @@ export default function NewGoal() {
         type="text"
         onChange={formik.handleChange}
         value={formik.values.verificationCriteria}
+        />
+        </div>
+      <div>
+      <label htmlFor="preProof">Pre Proof</label>
+      <input
+        id="preProof"
+        name="preProof"
+        type="text"
+        onChange={formik.handleChange}
+        value={formik.values.preProof}
         />
         </div>
       <div>
@@ -83,9 +94,9 @@ export default function NewGoal() {
         </div>
  
     <Web3Button
-      contractAddress="0xa13A74e12D850e954e4e73f4887A9A054a503b32"
+      contractAddress="0x3A3aB8A753d8E490b02941d7Dc86C04Aa392E239"
       action={(contract) => {
-        contract.call("makeNewGoal", formik.values.description, formik.values.verificationCriteria, formik.values.inEther, formik.values.amount, formik.values.token, formik.values.deadline)
+        contract.call("makeNewGoal", formik.values.description, formik.values.verificationCriteria, formik.values.inEther, formik.values.amount, formik.values.token, formik.values.deadline, formik.values.deadline)
       }}
     >
       makeNewGoal
