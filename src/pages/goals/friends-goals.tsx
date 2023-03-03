@@ -4,6 +4,7 @@ import {
   useFollowingQuery,
 } from "../../graphql/generated";
 import OracleHero from '../../components/OracleHero';
+import Button from '../../components/Button';
 // import styles from "../styles/Home.module.css";
 
 export type GoalStatus = 'complete' | 'voting' | 'ongoing'
@@ -43,9 +44,10 @@ export default function FriendsGoals
     <div>
       <OracleHero/>
       <div className='flex justify-center'>
-        <button onClick={()=>setGoalStatus('complete')}>Complete</button>
-        <button onClick={()=>setGoalStatus('voting')}>Voting</button>
-        <button onClick={()=>setGoalStatus('ongoing')}>Ongoing</button>
+        <Button text='Complete' cb={()=>setGoalStatus('complete')}></Button>
+        <Button text='Voting' cb={()=>setGoalStatus('voting')}></Button>
+        <Button text='Ongoing' cb={()=>setGoalStatus('ongoing')}></Button>
+        {goalStatus}
       </div>
       {data?.following.items.map(({profile})=><div key={profile.ownedBy}>
         <div>{profile.handle}</div>
