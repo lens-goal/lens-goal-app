@@ -1,26 +1,21 @@
-// import FeedPost from "../components/FeedPost";
 import { useState } from 'react'
 import { MediaRenderer, useAddress } from "@thirdweb-dev/react";
 import {
-  PublicationMainFocus,
-  PublicationSortCriteria,
   useFollowingQuery,
 } from "../../graphql/generated";
 // import styles from "../styles/Home.module.css";
 
+export type GoalStatus = 'complete' | 'voting' | 'ongoing'
+
 export default function FriendsGoals
 () {
   const address = useAddress();
-  const [friendsAdresses, setFriendsAddresses] = useState<string[]>([])
+  const [goalStatus, setGoalStatus] = useState<GoalStatus>('voting')
 
   const { isLoading, error, data } = useFollowingQuery(
     {
       request: {
         address,
-        // limit: 10,
-        // cursor: 0
-        // profileId: address
-        // sortCriteria: PublicationSortCriteria.Latest,
       },
     },
     {
@@ -31,6 +26,8 @@ export default function FriendsGoals
   );
 
   
+
+  
   if (error) {
     return <div>Error...</div>;
   }
@@ -39,8 +36,16 @@ export default function FriendsGoals
     return <div>Loading...</div>;
   }
 
+
+
   return (
     <div>
+      <div>
+        <button onClick={()=>setGoalStatus('complete')}>Complete</button>
+        <button onClick={()=>setGoalStatus('voting')}>Voting</button>
+        <button onClick={()=>setGoalStatus('ongoing')}>Ongoing</button>
+        {goalStatus}
+      </div>
       {data?.following.items.map(({profile})=><div key={profile.ownedBy}>
         <div>{profile.handle}</div>
         <MediaRenderer
