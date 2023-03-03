@@ -5,6 +5,7 @@ import {
 } from "../../graphql/generated";
 import OracleHero from '../../components/OracleHero';
 import Button from '../../components/Button';
+import GoalCard from '../../components/GoalCard';
 // import styles from "../styles/Home.module.css";
 
 export type GoalStatus = 'complete' | 'voting' | 'ongoing'
@@ -50,15 +51,9 @@ export default function FriendsGoals
         <Button text='Voting' cb={()=>setGoalStatus('voting')}></Button>
         <Button text='Ongoing' cb={()=>setGoalStatus('ongoing')}></Button>
       </div>
-      {data?.following.items.map(({profile})=><div key={profile.ownedBy}>
-        <div>{profile.handle}</div>
-        <MediaRenderer
-        // @ts-ignore
-         src={profile.picture.original.url || ""}
-            alt={
-              profile.name || profile?.handle || ""
-            }></MediaRenderer>
-        {profile.ownedBy}</div>)}
+      {data?.following.items.map(({profile})=><div className='mb-4' key={profile.ownedBy}>
+      <GoalCard profile={profile}/>
+        </div>)}
     </div>
   );
 }
