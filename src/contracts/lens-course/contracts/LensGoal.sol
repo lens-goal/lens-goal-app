@@ -10,23 +10,21 @@
 // \________|\_______|\__|  \__|\_______/        \______/  \______/  \_______|\__|
 
 // Team Lens Handles:
+// grzegorz.lens            | Front-End and Smart Contract Developer
+// leoawolanski.lens        | Smart Contract Engineer
 // cryptocomical.lens       | Designer
-// grzegorz.lens            | Front-End and Smart Contract developer
-// leoawolanski.lens        | Smart Contract Developer
 
 pragma solidity 0.8.17;
-pragma experimental ABIEncoderV2;
 
-import "hardhat/console.sol";
 import "./LensGoalHelpers.sol";
 import "./AutomationCompatible.sol";
 import "./AutomationCompatibleInterface.sol";
 
 contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     // wallet where funds will be transfered in case of goal failure
-    // is currently the 0 address for simplicity, edit later
+    // is currently the undefined, edit later
 
-    address communityWallet = address(0);
+    address communityWallet;
 
     // used to identify whether stake is in ether or erc20
     enum TokenType {
@@ -39,12 +37,6 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         PENDING,
         VOTED_TRUE,
         VOTED_FALSE
-    }
-
-    enum VotingStatus {
-        PENDING,
-        OPEN,
-        CLOSED
     }
 
     struct Votes {
@@ -75,7 +67,6 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         Votes votes;
         string preProof;
         string proof;
-        // when new stake is created it will be given this localStakeId. localStakeId will then be incremented
     }
 
     struct AdditionalStake {
@@ -103,59 +94,41 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     uint256 goalId;
     uint256 stakeId;
 
-    function getTimestamp() external view returns (uint256){
-        return block.timestamp;
-    } 
+    // events
+    event GoalCreated(
+        address indexed _user,
+        string _description,
+        string _verificationCriteria,
+        uint256 _deadline,
+        Status _status,
+        uint256 indexed _goalId
+    );
 
-    function isVotingStatus(uint256 _goalId, VotingStatus votingStatus) internal view returns (bool){
-        Goal memory goal = goalIdToGoal[_goalId];
+    event AdditionalStakeCreated(
+        address indexed _staker,
+        TokenType _tokenType,
+        uint256 _amount,
+        address _tokenAddress,
+        uint256 indexed _stakeId,
+        uint256 indexed _goalId
+    );
 
-        if(votingStatus==VotingStatus.PENDING){
-            return goal.info.status == Status.PENDING && block.timestamp < goal.info.deadline;
-        }else if(votingStatus==VotingStatus.OPEN){
-            return goal.info.status == Status.PENDING && block.timestamp > goal.info.deadline;
-        }else {
-            return goal.info.status != Status.PENDING;
-        }
-    }
+    event StakeWithdrawn(
+        TokenType _tokenType,
+        uint256 _amount,
+        address _tokenAddress,
+        uint256 indexed _stakeId,
+        uint256 indexed _goalId,
+        address indexed _staker
+    );
 
-    function getGoalsByUsersAndVotingStatus(address[] memory friends, VotingStatus votingStatus) 
-        external view returns (Goal[] memory){
-             // 1. First we have to find arrayLength
-        uint256 arrayLength;
-        
-        for(uint256 i; i < friends.length; i++){
-            uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
+    event ProofAdded(
+        address indexed _user,
+        string _proof,
+        uint256 indexed _goalId
+    );
 
-            for(uint256 j; j < friendGoalIds.length; j++){
-                if(isVotingStatus(friendGoalIds[j], votingStatus)){
-                        arrayLength++;
-                }
-            }
-
-        }
-
-        //3. Now we create array in memory
-        Goal[] memory goalBasicInfos = new Goal[](arrayLength);
-
-        uint256 index;
-
-        for(uint256 i; i < friends.length; i++){
-            uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
-
-            for(uint256 j; j < friendGoalIds.length; j++){
-                 
-                if(isVotingStatus(friendGoalIds[j], votingStatus)){
-                    goalBasicInfos[index] = goalIdToGoal[friendGoalIds[j]];
-                    index++;
-                }
-               
-            }
-
-        }
-
-        return goalBasicInfos;
-        }
+    event VoteCasted(address indexed _voter, bool _vote, uint256 _goalId);
 
     // allows user to make a new goal
     function makeNewGoal(
@@ -185,6 +158,14 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
                 Votes(0, 0),
                 preProof,
                 ""
+            );
+            emit GoalCreated(
+                msg.sender,
+                description,
+                verificationCriteria,
+                timestampEnd,
+                Status.PENDING,
+                goalId
             );
             // increment goalId for later goal instantiation
             goalId++;
@@ -220,12 +201,31 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
             userToGoalIds[msg.sender].push(goalId);
             // define goalId
             goalIdToGoal[goalId] = goal;
+            emit GoalCreated(
+                msg.sender,
+                description,
+                verificationCriteria,
+                timestampEnd,
+                Status.PENDING,
+                goalId
+            );
             // increment goalId (for future use)
             goalId++;
         }
     }
 
-  
+    // used in frontend
+    function getGoalByGoalId(
+        uint256 _goalId
+    ) public view returns (Goal memory) {
+        return goalIdToGoal[_goalId];
+    }
+
+    function getStakeByStakeId(
+        uint256 _stakeId
+    ) public view returns (AdditionalStake memory) {
+        return stakeIdToStake[_stakeId];
+    }
 
     // quickly get a Stake struct where token is ether
     function defaultEtherStake() internal view returns (Stake memory) {
@@ -255,6 +255,14 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
             goalIdToStakeIds[_goalId].push(stakeId);
             // define stake in mapping
             stakeIdToStake[stakeId] = stake;
+            emit AdditionalStakeCreated(
+                msg.sender,
+                TokenType.ETHER,
+                msg.value,
+                address(0),
+                stakeId,
+                _goalId
+            );
             // increment stakeId for future use
             stakeId++;
         } else {
@@ -273,6 +281,14 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
             goalIdToStakeIds[_goalId].push(stakeId);
             // define stake in mapping
             stakeIdToStake[stakeId] = stake;
+            emit AdditionalStakeCreated(
+                msg.sender,
+                TokenType.ERC20,
+                tokenAmount,
+                tokenAddress,
+                stakeId,
+                _goalId
+            );
             // increment stakeId for future use
             stakeId++;
         }
@@ -290,6 +306,7 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         );
         // update proof
         goalIdToGoal[_goalId].proof = proof;
+        emit ProofAdded(msg.sender, proof, _goalId);
     }
 
     // get info of goal (for front end)
@@ -317,6 +334,7 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         } else {
             goalIdToGoal[_goalId].votes.no++;
         }
+        emit VoteCasted(msg.sender, input, _goalId);
     }
 
     // checks if voting window is open
@@ -347,6 +365,14 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
                 stake.stake.amount
             );
         }
+        emit StakeWithdrawn(
+            stake.stake.tokenType,
+            stake.stake.amount,
+            stake.stake.tokenAddress,
+            stake.stakeId,
+            stake.goalId,
+            stake.staker
+        );
     }
 
     function votingWindowClosedAndStatusIsPending(
@@ -511,18 +537,4 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
             }
         }
     }
-
-      // used in frontend 
-    function getGoalByGoalId( 
-        uint256 _goalId 
-    ) public view returns (Goal memory) { 
-        return goalIdToGoal[_goalId]; 
-    } 
- 
-    function getStakeByStakeId( 
-        uint256 _stakeId 
-    ) public view returns (AdditionalStake memory) { 
-        return stakeIdToStake[_stakeId]; 
-    }
-
 }
