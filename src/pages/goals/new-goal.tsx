@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Web3Button } from "@thirdweb-dev/react";
+import { useState, useEffect } from "react";
+import { useAddress, useContract, Web3Button } from "@thirdweb-dev/react";
 import { useFormik } from "formik";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -12,7 +12,9 @@ import {
 import { LENS_GOAL_CONTRACT_ADDRESS } from "../../const/contracts";
 
 export default function NewGoal() {
+  const [tokensApproved, setTokensApproved] = useState(false);
   const [formStep, setFormStep] = useState(0);
+  const address = useAddress();
 
   const formik = useFormik({
     initialValues: {
@@ -29,6 +31,10 @@ export default function NewGoal() {
       alert(JSON.stringify(values, null, 2));
     },
   });
+
+  const { contract } = useContract(
+    whitelistedTokensByAddress[formik.values.token].address
+  );
 
   function nextStep() {
     setFormStep((step) => step + 1);
@@ -48,6 +54,21 @@ export default function NewGoal() {
       },
     });
   }
+
+  useEffect(() => {
+    if (!contract) return;
+
+    console.log(address);
+
+    contract.events.addEventListener("Approval", (event) => {
+      if (
+        event.data.owner === address &&
+        event.data.spender === LENS_GOAL_CONTRACT_ADDRESS
+      ) {
+        setTokensApproved(true);
+      }
+    });
+  }, [contract]);
 
   return (
     <form onSubmit={formik.handleSubmit}>
@@ -257,7 +278,7 @@ export default function NewGoal() {
           </div>
         </div>
       )}
-      {formStep === 5 && (
+      {formStep === 5 && formik.values.token !== "ETH" && (
         <div className="flex w-100 container mx-auto px-8 pt-4">
           <div className="flex grow">
             <div className="w-1/2 flex justify-center">
@@ -270,41 +291,50 @@ export default function NewGoal() {
             </div>
             <div className="flex flex-col grow justify-center items-center">
               <div className="mb-8">
-                <h2 className="text-center text-3xl">
-                  Almost finished!
-                  <span className="block">
-                    Approve LensGoal contract to accept {formik.values.amount}{" "}
-                    of yours{" "}
-                    {whitelistedTokensByAddress[formik.values.token].symbol}{" "}
-                    tokens
-                  </span>
-                </h2>
+                {tokensApproved ? (
+                  <h2 className="text-center text-3xl">
+                    Success! You can now create goal!
+                  </h2>
+                ) : (
+                  <h2 className="text-center text-3xl">
+                    Almost finished!
+                    <span className="block">
+                      Approve LensGoal contract to accept {formik.values.amount}{" "}
+                      of yours{" "}
+                      {whitelistedTokensByAddress[formik.values.token].symbol}{" "}
+                      tokens
+                    </span>
+                  </h2>
+                )}
               </div>
               <div>
-                <Web3Button
-                  contractAddress={
-                    whitelistedTokensByAddress[formik.values.token].address
-                  }
-                  action={(contract) => {
-                    contract.call(
-                      "approve",
-                      LENS_GOAL_CONTRACT_ADDRESS,
-                      formik.values.amount
-                    );
-                  }}
-                >
-                  Approve
-                </Web3Button>
+                {!tokensApproved && (
+                  <Web3Button
+                    contractAddress={
+                      whitelistedTokensByAddress[formik.values.token].address
+                    }
+                    action={(contract) => {
+                      contract.call(
+                        "approve",
+                        LENS_GOAL_CONTRACT_ADDRESS,
+                        formik.values.amount
+                      );
+                    }}
+                  >
+                    Approve
+                  </Web3Button>
+                )}
               </div>
               <div className="flex self-stretch justify-between">
                 <Button cb={prevStep} text="PREV"></Button>
-                <Button cb={nextStep} text="NEXT"></Button>
+                {tokensApproved && <Button cb={nextStep} text="NEXT"></Button>}
               </div>
             </div>
           </div>
         </div>
       )}
-      {formStep === 6 && (
+      {(formStep === 6 ||
+        (formStep === 5 && formik.values.token === "ETH")) && (
         <div className="flex w-100 container mx-auto px-8 pt-4">
           <div className="flex grow">
             <div className="w-1/2 flex justify-center">
