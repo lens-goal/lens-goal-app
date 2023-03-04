@@ -2,17 +2,18 @@
 import { MediaRenderer } from "@thirdweb-dev/react";
 import Link from "next/link";
 import React from "react";
-import { BigNumberMetaData } from "../types/types";
+import { BigNumberMetaData, Status } from "../types/types";
 import { parseDateFromBigNumber } from "../utils/parseDateFromBigNumber";
 
 type Props = {
   profile: any;
   description: string;
   deadline: BigNumberMetaData;
+  status: Status;
   id: string
 }
 
-export default function GoalCard({profile, description, deadline, id}: Props) {
+export default function GoalCard({profile, description, deadline, status, id}: Props) {
 
   return (
       <div className='flex p-8 bg-white rounded-2xl border-4 border-black'>
@@ -38,11 +39,11 @@ export default function GoalCard({profile, description, deadline, id}: Props) {
             <p>{parseDateFromBigNumber(deadline)}</p>
           </div>
           <div>
-          <Link
-          href={`/voting/${id}`}
-        >
-          Vote
-        </Link>
+            {status === Status.PENDING && (Date.now()/1000) > parseInt(deadline._hex, 16) && <Link
+            href={`/voting/${id}`}
+              >
+            Vote
+            </Link>}
           </div>
         </div>
       </div>

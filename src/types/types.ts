@@ -1,9 +1,9 @@
-enum TokenType {
+export enum TokenType {
     ETHER,
     ERC20
 }
 
-enum Status {
+export enum Status {
     PENDING,
     VOTED_TRUE,
     VOTED_FALSE

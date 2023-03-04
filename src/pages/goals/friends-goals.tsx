@@ -14,7 +14,6 @@ export enum GoalStatus  {
   'open',
   'closed'
 } 
-// 'complete' | 'voting' | 'ongoing'
 
 export default function FriendsGoals
 () {
@@ -76,11 +75,9 @@ export default function FriendsGoals
           key={goal.info.goalId._hex} 
           description={goal.info.description} 
           profile={profilesMap[goal.info.user]} 
+          status={goal.info.status}
           deadline={goal.info.deadline}/>
       })}
-      {/* {data?.following.items.map(({profile})=><div className='mb-4' key={profile.ownedBy}>
-      <GoalCard profile={profile}/>
-        </div>)} */}
     </div>
   );
 }
