@@ -5,6 +5,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import Image from "next/image";
 import Button from "../../components/Button";
+import { whitelistedTokens } from "../../const/whitelisted-tokens";
 
 export default function NewGoal() {
   const [formStep, setFormStep] = useState(0);
@@ -16,7 +17,7 @@ export default function NewGoal() {
       preProof: "",
       amount: 0,
       deadline: new Date(),
-      token: "0x294210dDbC38114dD6EE4959B797A0D2171f220b",
+      token: whitelistedTokens["ABC"].address,
       inEther: false,
     },
 
@@ -148,6 +149,73 @@ export default function NewGoal() {
           </div>
         </div>
       )}
+      {formStep === 3 && (
+        <div className="flex w-100 container mx-auto px-8 pt-4">
+          <div className="flex grow">
+            <div className="w-1/2 flex justify-center">
+              <Image
+                width={600}
+                height={600}
+                src="/heroimageLensGoal.png"
+                alt=""
+              ></Image>
+            </div>
+            <div className="flex flex-col grow justify-center items-center">
+              <div className="mb-8">
+                <h2 className="text-center text-3xl">
+                  Put you money where your
+                  <span className="block">GOAL is</span>
+                </h2>
+              </div>
+              <div className="flex justify-center self-stretch mb-8">
+                <div className="flex grow gap-6 justify-between">
+                  <div className="flex flex-col grow">
+                    <label
+                      className="block text-gray-700 font-bold mb-2"
+                      htmlFor="token"
+                    >
+                      Choose Token
+                    </label>
+                    <select
+                      id="token"
+                      name="token"
+                      onChange={formik.handleChange}
+                      value={formik.values.token}
+                      className="bg-white border-none rounded w-full py-2 px-4 text-gray-700 drop-shadow-lg leading-tight focus:outline-none focus:shadow-outline"
+                    >
+                      {Object.values(whitelistedTokens).map((token) => {
+                        return (
+                          <option value={token.address}>{token.symbol}</option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                  <div className="flex flex-col">
+                    <label
+                      className="block text-gray-700 font-bold mb-2"
+                      htmlFor="amount"
+                    >
+                      Amount
+                    </label>
+                    <input
+                      className="border-none w-full drop-shadow-lg text-gray-700 mr-3 py-2 px-4 leading-tight focus:outline-none"
+                      id="amount"
+                      name="amount"
+                      type="number"
+                      onChange={formik.handleChange}
+                      value={formik.values.amount}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex self-stretch justify-between">
+                <Button cb={prevStep} text="PREV"></Button>
+                <Button cb={nextStep} text="NEXT"></Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div>
         <label htmlFor="preProof">Pre Proof</label>
         <input
@@ -156,26 +224,6 @@ export default function NewGoal() {
           type="text"
           onChange={formik.handleChange}
           value={formik.values.preProof}
-        />
-      </div>
-      <div>
-        <label htmlFor="amount">Amount</label>
-        <input
-          id="amount"
-          name="amount"
-          type="number"
-          onChange={formik.handleChange}
-          value={formik.values.amount}
-        />
-      </div>
-      <div>
-        <label htmlFor="token">Token</label>
-        <input
-          id="token"
-          name="token"
-          type="string"
-          onChange={formik.handleChange}
-          value={formik.values.token}
         />
       </div>
       <div>
