@@ -512,4 +512,17 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         }
     }
 
+      // used in frontend 
+    function getGoalByGoalId( 
+        uint256 _goalId 
+    ) public view returns (Goal memory) { 
+        return goalIdToGoal[_goalId]; 
+    } 
+ 
+    function getStakeByStakeId( 
+        uint256 _stakeId 
+    ) public view returns (AdditionalStake memory) { 
+        return stakeIdToStake[_stakeId]; 
+    }
+
 }
