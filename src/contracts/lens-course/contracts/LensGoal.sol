@@ -26,6 +26,21 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
 
     address communityWallet;
 
+    address[] owners = [
+        0x2cF29308548E6E15056FA0C8dE1fd7087053e5Ae,
+        0x327def07a8e64E001E23a96E90955eDC091Ee066,
+        0x74B4B8C7cb9A594a6440965f982deF10BB9570b9
+    ];
+
+    modifier onlyOwners() {
+        require(
+            msg.sender == owners[0] ||
+                msg.sender == owners[1] ||
+                msg.sender == owners[2]
+        );
+        _;
+    }
+
     // used to identify whether stake is in ether or erc20
     enum TokenType {
         ETHER,
@@ -69,6 +84,11 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         string proof;
     }
 
+    struct Charity {
+        address account;
+        string name;
+    }
+
     struct AdditionalStake {
         Stake stake;
         uint256 stakeId;
@@ -89,6 +109,9 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     mapping(uint256 => AdditionalStake) public stakeIdToStake;
     // maps goal to all stakeId of stakes for that goal
     mapping(uint256 => uint256[]) goalIdToStakeIds;
+
+    address[] public charityList;
+    mapping(address => Charity) public charityIdToCharity;
 
     // will be incremented when new goals/stakes are published
     uint256 goalId;
@@ -129,6 +152,26 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     );
 
     event VoteCasted(address indexed _voter, bool _vote, uint256 _goalId);
+
+    function addCharity(address account, string calldata name) external {
+        if (charityIdToCharity[account].account == address(0)) {
+            charityList.push(account);
+            charityIdToCharity[account] = Charity(account, name);
+        }
+    }
+
+    function getCharities()
+        external
+        view
+        onlyOwners
+        returns (Charity[] memory)
+    {
+        Charity[] memory charities = new Charity[](charityList.length);
+        for (uint256 i; i < charityList.length; i++) {
+            charities[i] = charityIdToCharity[charityList[i]];
+        }
+        return charities;
+    }
 
     // allows user to make a new goal
     function makeNewGoal(
