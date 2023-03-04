@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { Web3Button } from "@thirdweb-dev/react";
 import { useFormik } from "formik";
 import Image from "next/image";
 import Button from "../../components/Button";
 
 export default function NewGoal() {
+  const [formStep, setFormStep] = useState(0);
+
   const formik = useFormik({
     initialValues: {
       description: "",
@@ -20,61 +23,88 @@ export default function NewGoal() {
     },
   });
 
+  function nextStep() {
+    setFormStep((step) => step + 1);
+  }
+
+  function prevStep() {
+    if (formStep === 0) return;
+    setFormStep((step) => step - 1);
+  }
+
   return (
     <form onSubmit={formik.handleSubmit}>
-      <div className="flex w-100 container mx-auto px-8 pt-4">
-        <div className="flex grow">
-          <div className="w-1/2 flex justify-center">
-            <Image
-              width={600}
-              height={600}
-              src="/heroimageLensGoal.png"
-              alt=""
-            ></Image>
-          </div>
-          <div className="flex flex-col grow justify-center items-center">
-            <div className="mb-8">
-              <h2 className="text-center text-3xl">
-                What is your
-                <span className="block">GOAL?</span>
-              </h2>
+      {formStep === 0 && (
+        <div className="flex w-100 container mx-auto px-8 pt-4">
+          <div className="flex grow">
+            <div className="w-1/2 flex justify-center">
+              <Image
+                width={600}
+                height={600}
+                src="/heroimageLensGoal.png"
+                alt=""
+              ></Image>
             </div>
-            <div className="self-stretch mb-8">
-              <textarea
-                id="description"
-                name="description"
-                onChange={formik.handleChange}
-                value={formik.values.description}
-                rows={5}
-                className="w-full px-4 py-2 text-gray-700 border rounded-lg drop-shadow-lg focus:outline-none focus:border-blue-500"
-              />
-            </div>
-            <div className="self-end">
-              <Button text="NEXT"></Button>
+            <div className="flex flex-col grow justify-center items-center">
+              <div className="mb-8">
+                <h2 className="text-center text-3xl">
+                  What is your
+                  <span className="block">GOAL?</span>
+                </h2>
+              </div>
+              <div className="self-stretch mb-8">
+                <textarea
+                  id="description"
+                  name="description"
+                  onChange={formik.handleChange}
+                  value={formik.values.description}
+                  rows={5}
+                  className="w-full px-4 py-2 text-gray-700 border rounded-lg drop-shadow-lg focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div className="self-end">
+                <Button cb={nextStep} text="NEXT"></Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      {/* <div>
-      <label htmlFor="description">Description</label>
-      <input
-        id="description"
-        name="description"
-        type="text"
-        onChange={formik.handleChange}
-        value={formik.values.description}
-        />
-        </div> */}
-      <div>
-        <label htmlFor="verificationCriteria">Verification Criteria</label>
-        <input
-          id="verificationCriteria"
-          name="verificationCriteria"
-          type="text"
-          onChange={formik.handleChange}
-          value={formik.values.verificationCriteria}
-        />
-      </div>
+      )}
+      {formStep === 1 && (
+        <div className="flex w-100 container mx-auto px-8 pt-4">
+          <div className="flex grow">
+            <div className="w-1/2 flex justify-center">
+              <Image
+                width={600}
+                height={600}
+                src="/heroimageLensGoal.png"
+                alt=""
+              ></Image>
+            </div>
+            <div className="flex flex-col grow justify-center items-center">
+              <div className="mb-8">
+                <h2 className="text-center text-3xl">
+                  What will be your
+                  <span className="block">PROOF?</span>
+                </h2>
+              </div>
+              <div className="self-stretch mb-8">
+                <textarea
+                  id="verificationCriteria"
+                  name="verificationCriteria"
+                  onChange={formik.handleChange}
+                  value={formik.values.verificationCriteria}
+                  rows={5}
+                  className="w-full px-4 py-2 text-gray-700 border rounded-lg drop-shadow-lg focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div className="flex self-stretch justify-between">
+                <Button cb={prevStep} text="PREV"></Button>
+                <Button cb={nextStep} text="NEXT"></Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div>
         <label htmlFor="preProof">Pre Proof</label>
         <input
