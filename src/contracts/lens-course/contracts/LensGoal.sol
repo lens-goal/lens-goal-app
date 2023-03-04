@@ -41,6 +41,12 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         VOTED_FALSE
     }
 
+    enum VotingStatus {
+        PENDING,
+        OPEN,
+        CLOSED
+    }
+
     struct Votes {
         uint256 yes;
         uint256 no;
@@ -104,6 +110,18 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     uint256 goalId;
     uint256 stakeId;
 
+    function isVotingStatus(uint256 _goalId, VotingStatus votingStatus) internal view returns (bool){
+        Goal memory goal = goalIdToGoal[_goalId];
+
+        if(votingStatus==VotingStatus.PENDING){
+            return goal.info.status == Status.PENDING && block.timestamp < goal.info.deadline;
+        }else if(votingStatus==VotingStatus.OPEN){
+            return goal.info.status == Status.PENDING && block.timestamp > goal.info.deadline;
+        }else {
+            return goal.info.status != Status.PENDING;
+        }
+    }
+
     function getPendingGoals(address[] memory friends) external view returns (Goal[] memory){
         // 1. First we have to find arrayLength
         uint256 arrayLength;
@@ -112,9 +130,7 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
             uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
 
             for(uint256 j; j < friendGoalIds.length; j++){
-                Goal memory goal = goalIdToGoal[j];
-                if( goal.info.status == Status.PENDING &&
-                    block.timestamp < goal.info.deadline){
+                if(isVotingStatus(j, VotingStatus.PENDING)){
                         arrayLength++;
                 }
             }
@@ -130,10 +146,8 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
             uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
 
             for(uint256 j; j < friendGoalIds.length; j++){
-                Goal memory goal = goalIdToGoal[j];
                  
-                if(goal.info.status == Status.PENDING &&
-                    block.timestamp < goal.info.deadline){
+                if(isVotingStatus(j, VotingStatus.PENDING)){
                          goalBasicInfos[index] = goalIdToGoal[j];
                 }
                
@@ -153,9 +167,7 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
             uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
 
             for(uint256 j; j < friendGoalIds.length; j++){
-                Goal memory goal = goalIdToGoal[j];
-                if( goal.info.status == Status.PENDING &&
-                    block.timestamp > goal.info.deadline){
+                if(isVotingStatus(j, VotingStatus.OPEN)){
                         arrayLength++;
                 }
             }
@@ -171,10 +183,8 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
             uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
 
             for(uint256 j; j < friendGoalIds.length; j++){
-                Goal memory goal = goalIdToGoal[j];
                  
-                if( goal.info.status == Status.PENDING &&
-                    block.timestamp > goal.info.deadline){
+                if(isVotingStatus(j, VotingStatus.OPEN)){
                          goalBasicInfos[index] = goalIdToGoal[j];
                 }
                
@@ -194,8 +204,7 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
             uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
 
             for(uint256 j; j < friendGoalIds.length; j++){
-                Goal memory goal = goalIdToGoal[j];
-                if( goal.info.status != Status.PENDING){
+                if(isVotingStatus(j, VotingStatus.CLOSED)){
                         arrayLength++;
                 }
             }
@@ -211,9 +220,8 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
             uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
 
             for(uint256 j; j < friendGoalIds.length; j++){
-                Goal memory goal = goalIdToGoal[j];
                  
-                if( goal.info.status != Status.PENDING){
+                if(isVotingStatus(j, VotingStatus.CLOSED)){
                          goalBasicInfos[index] = goalIdToGoal[j];
                 }
                
