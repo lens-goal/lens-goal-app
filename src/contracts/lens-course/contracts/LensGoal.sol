@@ -98,13 +98,6 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     mapping(uint256 => AdditionalStake) public stakeIdToStake;
     // maps goal to all stakeId of stakes for that goal
     mapping(uint256 => uint256[]) goalIdToStakeIds;
-    // // maps address to goals user will be able to vote on (pending)
-    // mapping(address => GoalBasicInfo[]) public addressToPendingFriendGoalInfos;
-    // // maps address to goals user can vote on (voting open)
-    // mapping(address => GoalBasicInfo[]) public addressToOpenFriendGoalInfos;
-    // // maps address to goals user can't vote on (voting closed)
-    // mapping(address => GoalBasicInfo[]) public addressToClosedFriendGoalInfos;
-    Goal[] goals;
 
     // will be incremented when new goals/stakes are published
     uint256 goalId;
@@ -122,15 +115,16 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         }
     }
 
-    function getPendingGoals(address[] memory friends) external view returns (Goal[] memory){
-        // 1. First we have to find arrayLength
+    function getGoalsByUsersAndVotingStatus(address[] memory friends, VotingStatus votingStatus) 
+        external view returns (Goal[] memory){
+             // 1. First we have to find arrayLength
         uint256 arrayLength;
         
         for(uint256 i; i < friends.length; i++){
             uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
 
             for(uint256 j; j < friendGoalIds.length; j++){
-                if(isVotingStatus(j, VotingStatus.PENDING)){
+                if(isVotingStatus(j, votingStatus)){
                         arrayLength++;
                 }
             }
@@ -147,7 +141,7 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
 
             for(uint256 j; j < friendGoalIds.length; j++){
                  
-                if(isVotingStatus(j, VotingStatus.PENDING)){
+                if(isVotingStatus(j, votingStatus)){
                          goalBasicInfos[index] = goalIdToGoal[j];
                 }
                
@@ -157,81 +151,7 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         }
 
         return goalBasicInfos;
-    }
-
-    function getOpenGoals(address[] memory friends) external view returns (Goal[] memory){
-        // 1. First we have to find arrayLength
-        uint256 arrayLength;
-        
-        for(uint256 i; i < friends.length; i++){
-            uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
-
-            for(uint256 j; j < friendGoalIds.length; j++){
-                if(isVotingStatus(j, VotingStatus.OPEN)){
-                        arrayLength++;
-                }
-            }
-
         }
-
-        //3. Now we create array in memory
-        Goal[] memory goalBasicInfos = new Goal[](arrayLength);
-
-        uint256 index;
-
-        for(uint256 i; i < friends.length; i++){
-            uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
-
-            for(uint256 j; j < friendGoalIds.length; j++){
-                 
-                if(isVotingStatus(j, VotingStatus.OPEN)){
-                         goalBasicInfos[index] = goalIdToGoal[j];
-                }
-               
-                index++;
-            }
-
-        }
-
-        return goalBasicInfos;
-    }
-
-     function getClosedGoals(address[] memory friends) external view returns (Goal[] memory){
-        // 1. First we have to find arrayLength
-        uint256 arrayLength;
-        
-        for(uint256 i; i < friends.length; i++){
-            uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
-
-            for(uint256 j; j < friendGoalIds.length; j++){
-                if(isVotingStatus(j, VotingStatus.CLOSED)){
-                        arrayLength++;
-                }
-            }
-
-        }
-
-        //3. Now we create array in memory
-        Goal[] memory goalBasicInfos = new Goal[](arrayLength);
-
-        uint256 index;
-
-        for(uint256 i; i < friends.length; i++){
-            uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
-
-            for(uint256 j; j < friendGoalIds.length; j++){
-                 
-                if(isVotingStatus(j, VotingStatus.CLOSED)){
-                         goalBasicInfos[index] = goalIdToGoal[j];
-                }
-               
-                index++;
-            }
-
-        }
-
-        return goalBasicInfos;
-    }
 
     // allows user to make a new goal
     function makeNewGoal(
