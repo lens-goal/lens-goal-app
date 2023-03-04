@@ -10,7 +10,7 @@ type Props = {
   description: string;
   deadline: BigNumberMetaData;
   status: Status;
-  id: string
+  id: BigNumberMetaData
 }
 
 export default function GoalCard({profile, description, deadline, status, id}: Props) {
@@ -40,7 +40,7 @@ export default function GoalCard({profile, description, deadline, status, id}: P
           </div>
           <div>
             {status === Status.PENDING && (Date.now()/1000) > parseInt(deadline._hex, 16) && <Link
-            href={`/voting/${id}`}
+            href={`/voting/${parseInt(id._hex, 16)}`}
               >
             Vote
             </Link>}

@@ -8,6 +8,7 @@ import Button from '../../components/Button';
 import GoalCard from '../../components/GoalCard';
 import { UseQueryResult } from '@tanstack/react-query';
 import { getGoalsArray, GoalsByUserAndVotingStatus } from '../../types/types';
+import { LENS_GOAL_CONTRACT_ADDRESS } from '../../const/contracts';
 
 export enum GoalStatus  {
   'pending',
@@ -34,7 +35,7 @@ export default function FriendsGoals
     }
   );
 
-  const { contract } = useContract("0xDCFa9da3e6e4d994Dc3E8D42cabfe86Afd34F857");
+  const { contract } = useContract(LENS_GOAL_CONTRACT_ADDRESS);
   const { data: goalsData, isLoading: goalsLoading } : UseQueryResult<GoalsByUserAndVotingStatus, unknown> = useContractRead(contract, "getGoalsByUsersAndVotingStatus", addresses, goalStatus)
   
 
@@ -76,6 +77,7 @@ export default function FriendsGoals
           description={goal.info.description} 
           profile={profilesMap[goal.info.user]} 
           status={goal.info.status}
+          id={goal.info.goalId}
           deadline={goal.info.deadline}/>
       })}
     </div>

@@ -1,8 +1,8 @@
-// 1. export the contract address
+export const LENS_GOAL_CONTRACT_ADDRESS = '0xDCFa9da3e6e4d994Dc3E8D42cabfe86Afd34F857'
+
 export const LENS_CONTRACT_ADDRESS =
   "0xDb46d1Dc155634FbC732f92E853b10B288AD5a1d";
 
-// 2. export the contract abi
 export const LENS_CONTRACT_ABI = [
   {
     inputs: [

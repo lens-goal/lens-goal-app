@@ -50,28 +50,32 @@ export interface Goal {
     proof: string
 }
 
+export function getGoalFromGoalTuple(goalTuple: GoalTuple){
+    const [goalBasicInfoTuple,stakeTuple,votesTuple,preProof,proof] = goalTuple
+
+     return {
+        info: {
+            user: goalBasicInfoTuple[0],
+            description: goalBasicInfoTuple[1],
+            verificationCriteria: goalBasicInfoTuple[2],
+            deadline: goalBasicInfoTuple[3],
+            status: goalBasicInfoTuple[4],
+            goalId: goalBasicInfoTuple[5]
+        },
+        stake: {
+            tokenType: stakeTuple[0],
+            amount: stakeTuple[1],
+            tokenAddress: stakeTuple[2]
+        },
+        votes: {
+            yes: votesTuple[0],
+            no: votesTuple[0],
+        },
+        preProof,
+        proof
+    }
+}
+
 export function getGoalsArray(goals: GoalsByUserAndVotingStatus) {
-    return goals.map<Goal>(([goalBasicInfoTuple,stakeTuple,votesTuple,preProof,proof])=>{
-        return {
-            info: {
-                user: goalBasicInfoTuple[0],
-                description: goalBasicInfoTuple[1],
-                verificationCriteria: goalBasicInfoTuple[2],
-                deadline: goalBasicInfoTuple[3],
-                status: goalBasicInfoTuple[4],
-                goalId: goalBasicInfoTuple[5]
-            },
-            stake: {
-                tokenType: stakeTuple[0],
-                amount: stakeTuple[1],
-                tokenAddress: stakeTuple[2]
-            },
-            votes: {
-                yes: votesTuple[0],
-                no: votesTuple[0],
-            },
-            preProof,
-            proof
-        }
-    })
+    return goals.map<Goal>(getGoalFromGoalTuple)
 }
