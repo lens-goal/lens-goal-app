@@ -79,3 +79,12 @@ export function getGoalFromGoalTuple(goalTuple: GoalTuple){
 export function getGoalsArray(goals: GoalsByUserAndVotingStatus) {
     return goals.map<Goal>(getGoalFromGoalTuple)
 }
+
+export interface GoalCreatedEventData {
+    _deadline: BigNumberMetaData,
+    _desription: string,
+    _goalId: BigNumberMetaData,
+    _status: Status,
+    _user: Address,
+    _verificationCriteria: string
+}

@@ -10,10 +10,14 @@ import {
   whitelistedTokensByAddress,
 } from "../../const/whitelisted-tokens";
 import { LENS_GOAL_CONTRACT_ADDRESS } from "../../const/contracts";
+import { GoalCreatedEventData } from "../../types/types";
 
 export default function NewGoal() {
   const [tokensApproved, setTokensApproved] = useState(false);
   const [formStep, setFormStep] = useState(0);
+  const [createdGoal, setCreatedGoal] = useState<GoalCreatedEventData | null>(
+    null
+  );
   const address = useAddress();
 
   const formik = useFormik({
@@ -28,12 +32,16 @@ export default function NewGoal() {
     },
 
     onSubmit: (values) => {
-      alert(JSON.stringify(values, null, 2));
+      console.log(JSON.stringify(values, null, 2));
     },
   });
 
-  const { contract } = useContract(
+  const { contract: erc20Contract } = useContract(
     whitelistedTokensByAddress[formik.values.token].address
+  );
+
+  const { contract: lensGoalContract } = useContract(
+    LENS_GOAL_CONTRACT_ADDRESS
   );
 
   function nextStep() {
@@ -56,11 +64,8 @@ export default function NewGoal() {
   }
 
   useEffect(() => {
-    if (!contract) return;
-
-    console.log(address);
-
-    contract.events.addEventListener("Approval", (event) => {
+    if (!erc20Contract) return;
+    erc20Contract.events.addEventListener("Approval", (event) => {
       if (
         event.data.owner === address &&
         event.data.spender === LENS_GOAL_CONTRACT_ADDRESS
@@ -68,7 +73,16 @@ export default function NewGoal() {
         setTokensApproved(true);
       }
     });
-  }, [contract]);
+  }, [erc20Contract]);
+
+  useEffect(() => {
+    if (!lensGoalContract) return;
+    lensGoalContract.events.addEventListener("GoalCreated", (event) => {
+      if (address === event.data._user) {
+        setCreatedGoal(event.data as GoalCreatedEventData);
+      }
+    });
+  }, [lensGoalContract]);
 
   return (
     <form onSubmit={formik.handleSubmit}>
