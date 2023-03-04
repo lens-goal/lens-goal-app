@@ -1,12 +1,13 @@
-import { useState } from 'react'
-import { MediaRenderer, useAddress } from "@thirdweb-dev/react";
+import { useEffect, useState } from 'react'
+import { MediaRenderer, useAddress, useContract, useContractRead } from "@thirdweb-dev/react";
 import {
   useFollowingQuery,
 } from "../../graphql/generated";
 import OracleHero from '../../components/OracleHero';
 import Button from '../../components/Button';
 import GoalCard from '../../components/GoalCard';
-// import styles from "../styles/Home.module.css";
+import { UseQueryResult } from '@tanstack/react-query';
+import { GoalsByUserAndVotingStatus } from '../../types/types';
 
 export type GoalStatus = 'complete' | 'voting' | 'ongoing'
 
@@ -14,6 +15,7 @@ export default function FriendsGoals
 () {
   const address = useAddress();
   const [goalStatus, setGoalStatus] = useState<GoalStatus>('voting')
+  const [addresses, setAddresses] = useState<string[]>([])
 
   const { isLoading, error, data } = useFollowingQuery(
     {
@@ -28,7 +30,13 @@ export default function FriendsGoals
     }
   );
 
+  const { contract } = useContract("0xDCFa9da3e6e4d994Dc3E8D42cabfe86Afd34F857");
+  const { data: goalsData, isLoading: goalsLoading } : UseQueryResult<GoalsByUserAndVotingStatus, unknown> = useContractRead(contract, "getGoalsByUsersAndVotingStatus", addresses, 1)
   
+
+  useEffect(()=>{
+   setAddresses(data?.following.items.map(item=>item.profile.ownedBy) || [])
+  },[data])
 
   
   if (error) {
@@ -38,8 +46,6 @@ export default function FriendsGoals
   if (isLoading) {
     return <div>Loading...</div>;
   }
-
-
 
   return (
     <div>
