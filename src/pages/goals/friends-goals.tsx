@@ -7,7 +7,7 @@ import OracleHero from '../../components/OracleHero';
 import Button from '../../components/Button';
 import GoalCard from '../../components/GoalCard';
 import { UseQueryResult } from '@tanstack/react-query';
-import { GoalsByUserAndVotingStatus } from '../../types/types';
+import { getGoalsArray, GoalsByUserAndVotingStatus } from '../../types/types';
 
 export enum GoalStatus  {
   'pending',
@@ -52,19 +52,35 @@ export default function FriendsGoals
     return <div>Loading...</div>;
   }
 
+  function getProfilesMap(){
+    return data?.following.items.reduce<any>((acc,cur)=>{
+      acc[cur.profile.ownedBy as string] = cur.profile;
+      return acc
+    },{})
+  }
+
+  const profilesMap = getProfilesMap()
+
   return (
     <div>
       <div className='py-6'>
         <OracleHero/>
       </div>
       <div className='flex justify-center'>
-        <Button text='Complete' cb={()=>setGoalStatus(GoalStatus.pending)}></Button>
-        <Button text='Voting' cb={()=>setGoalStatus(GoalStatus.open)}></Button>
-        <Button text='Ongoing' cb={()=>setGoalStatus(GoalStatus.closed)}></Button>
+        <Button text='Pending' cb={()=>setGoalStatus(GoalStatus.pending)}></Button>
+        <Button text='Open' cb={()=>setGoalStatus(GoalStatus.open)}></Button>
+        <Button text='Closed' cb={()=>setGoalStatus(GoalStatus.closed)}></Button>
       </div>
-      {data?.following.items.map(({profile})=><div className='mb-4' key={profile.ownedBy}>
+      {goalsData && getGoalsArray(goalsData).map((goal)=>{
+        return <GoalCard 
+          key={goal.info.goalId._hex} 
+          description={goal.info.description} 
+          profile={profilesMap[goal.info.user]} 
+          deadline={goal.info.deadline}/>
+      })}
+      {/* {data?.following.items.map(({profile})=><div className='mb-4' key={profile.ownedBy}>
       <GoalCard profile={profile}/>
-        </div>)}
+        </div>)} */}
     </div>
   );
 }

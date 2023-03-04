@@ -10,8 +10,8 @@ enum Status {
 }
 
 export interface BigNumberMetaData {
-  type: string,
-  hex: string
+  _type: string,
+  _hex: string
 }
 export type Address = string
 export type PreProof = string
