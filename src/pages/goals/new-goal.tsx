@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Web3Button } from "@thirdweb-dev/react";
 import { useFormik } from "formik";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import Image from "next/image";
 import Button from "../../components/Button";
 
@@ -13,7 +15,7 @@ export default function NewGoal() {
       verificationCriteria: "",
       preProof: "",
       amount: 0,
-      deadline: 0,
+      deadline: new Date(),
       token: "0x294210dDbC38114dD6EE4959B797A0D2171f220b",
       inEther: false,
     },
@@ -30,6 +32,16 @@ export default function NewGoal() {
   function prevStep() {
     if (formStep === 0) return;
     setFormStep((step) => step - 1);
+  }
+
+  function handleDeadilneChange(date: any) {
+    formik.handleChange({
+      target: {
+        id: "deadline",
+        name: "deadline",
+        value: date,
+      },
+    });
   }
 
   return (
@@ -105,6 +117,37 @@ export default function NewGoal() {
           </div>
         </div>
       )}
+      {formStep === 2 && (
+        <div className="flex w-100 container mx-auto px-8 pt-4">
+          <div className="flex grow">
+            <div className="w-1/2 flex justify-center">
+              <Image
+                width={600}
+                height={600}
+                src="/heroimageLensGoal.png"
+                alt=""
+              ></Image>
+            </div>
+            <div className="flex flex-col grow justify-center items-center">
+              <div className="mb-8">
+                <h2 className="text-center text-3xl">
+                  What date will you achieve this?
+                </h2>
+              </div>
+              <div className="flex justify-center self-stretch mb-8">
+                <Calendar
+                  onChange={handleDeadilneChange}
+                  value={formik.values.deadline}
+                />
+              </div>
+              <div className="flex self-stretch justify-between">
+                <Button cb={prevStep} text="PREV"></Button>
+                <Button cb={nextStep} text="NEXT"></Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div>
         <label htmlFor="preProof">Pre Proof</label>
         <input
@@ -123,16 +166,6 @@ export default function NewGoal() {
           type="number"
           onChange={formik.handleChange}
           value={formik.values.amount}
-        />
-      </div>
-      <div>
-        <label htmlFor="deadline">Deadline</label>
-        <input
-          id="deadline"
-          name="deadline"
-          type="number"
-          onChange={formik.handleChange}
-          value={formik.values.deadline}
         />
       </div>
       <div>
