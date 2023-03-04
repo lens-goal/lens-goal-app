@@ -1,12 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import FeedPost from "../components/FeedPost";
 import {
-  PublicationMainFocus,
   PublicationSortCriteria,
   useExplorePublicationsQuery,
 } from "../graphql/generated";
-import styles from "../styles/Home.module.css";
 
 export default function Home() {
   const { isLoading, error, data } = useExplorePublicationsQuery(
@@ -25,17 +22,16 @@ export default function Home() {
   console.log(data);
 
   if (error) {
-    return <div className={styles.container}>Error...</div>;
+    return <div>Error...</div>;
   }
 
   if (isLoading) {
-    return <div className={styles.container}>Loading...</div>;
+    return <div>Loading...</div>;
   }
 
   return (
-    <div className={styles.container}>
-      {/* Iterate over the array of items inside the data field  */}
-      <div>
+    <div >
+      <div >
         <div className="flex align-middle">
           <div className="w-1/2">
             <Image width={650} height={650} src='/heroimageLensGoal.png' alt=''></Image>  
@@ -55,8 +51,20 @@ export default function Home() {
           </div>
 
         </div>
-        <div>
-          <Image width={1850} height={2953} src='/dottedLine.svg' alt=''></Image> 
+        <div className="relative">
+
+          <div style={{backgroundColor: "#ABFE2C", height: 900}}>
+
+          </div>
+          <div style={{ height: 900}}>
+
+          </div>
+          <div style={{backgroundColor: "#ABFE2C", height: 750}}>
+
+          </div>
+          <div className="absolute -top-10 left-0">
+            <Image width={1850} height={2953} src='/dottedLine.svg' alt=''></Image> 
+          </div>
         </div>
       </div>
     </div>
