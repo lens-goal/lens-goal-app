@@ -11,6 +11,8 @@ import {
 } from "../../const/whitelisted-tokens";
 import { LENS_GOAL_CONTRACT_ADDRESS } from "../../const/contracts";
 import { GoalCreatedEventData } from "../../types/types";
+import Modal from "../../components/Modal";
+import { parseDateFromBigNumber } from "../../utils/parseDateFromBigNumber";
 
 export default function NewGoal() {
   const [tokensApproved, setTokensApproved] = useState(false);
@@ -86,6 +88,31 @@ export default function NewGoal() {
 
   return (
     <form onSubmit={formik.handleSubmit}>
+      {createdGoal && (
+        <Modal>
+          <div
+            style={{ minWidth: "600px", minHeight: "300px" }}
+            className="px-8 py-8"
+          >
+            <h2 className="text-center text-3xl py-4">Goal Created!</h2>
+            <div className="mb-4">
+              <h3 className="font-bold">Description:</h3>
+              <p>{createdGoal._description}</p>
+            </div>
+            <div className="mb-4">
+              <h3 className="font-bold">Deadline:</h3>
+              <p>{parseDateFromBigNumber(createdGoal._deadline)}</p>
+            </div>
+            <div className="mb-4">
+              <h3 className="font-bold">Verification Criteria:</h3>
+              <p>{createdGoal._verificationCriteria}</p>
+            </div>
+            <div className="flex justify-end">
+              <Button text="Share On Lens!"></Button>
+            </div>
+          </div>
+        </Modal>
+      )}
       {formStep === 0 && (
         <div className="flex w-100 container mx-auto px-8 pt-4">
           <div className="flex grow">

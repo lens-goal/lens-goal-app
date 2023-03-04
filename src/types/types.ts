@@ -82,7 +82,7 @@ export function getGoalsArray(goals: GoalsByUserAndVotingStatus) {
 
 export interface GoalCreatedEventData {
     _deadline: BigNumberMetaData,
-    _desription: string,
+    _description: string,
     _goalId: BigNumberMetaData,
     _status: Status,
     _user: Address,
