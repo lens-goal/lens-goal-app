@@ -17,7 +17,7 @@
 pragma solidity 0.8.17;
 pragma experimental ABIEncoderV2;
 
-
+import "hardhat/console.sol";
 import "./LensGoalHelpers.sol";
 import "./AutomationCompatible.sol";
 import "./AutomationCompatibleInterface.sol";
@@ -103,6 +103,10 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     uint256 goalId;
     uint256 stakeId;
 
+    function getTimestamp() external view returns (uint256){
+        return block.timestamp;
+    } 
+
     function isVotingStatus(uint256 _goalId, VotingStatus votingStatus) internal view returns (bool){
         Goal memory goal = goalIdToGoal[_goalId];
 
@@ -124,7 +128,7 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
             uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
 
             for(uint256 j; j < friendGoalIds.length; j++){
-                if(isVotingStatus(j, votingStatus)){
+                if(isVotingStatus(friendGoalIds[j], votingStatus)){
                         arrayLength++;
                 }
             }
@@ -141,11 +145,11 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
 
             for(uint256 j; j < friendGoalIds.length; j++){
                  
-                if(isVotingStatus(j, votingStatus)){
-                         goalBasicInfos[index] = goalIdToGoal[j];
+                if(isVotingStatus(friendGoalIds[j], votingStatus)){
+                    goalBasicInfos[index] = goalIdToGoal[friendGoalIds[j]];
+                    index++;
                 }
                
-                index++;
             }
 
         }
