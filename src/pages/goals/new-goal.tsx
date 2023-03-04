@@ -5,7 +5,11 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import Image from "next/image";
 import Button from "../../components/Button";
-import { whitelistedTokens } from "../../const/whitelisted-tokens";
+import {
+  whitelistedTokens,
+  whitelistedTokensByAddress,
+} from "../../const/whitelisted-tokens";
+import { LENS_GOAL_CONTRACT_ADDRESS } from "../../const/contracts";
 
 export default function NewGoal() {
   const [formStep, setFormStep] = useState(0);
@@ -188,6 +192,7 @@ export default function NewGoal() {
                           <option value={token.address}>{token.symbol}</option>
                         );
                       })}
+                      <option value="ETH">ETH</option>
                     </select>
                   </div>
                   <div className="flex flex-col">
@@ -216,44 +221,130 @@ export default function NewGoal() {
           </div>
         </div>
       )}
-      <div>
-        <label htmlFor="preProof">Pre Proof</label>
-        <input
-          id="preProof"
-          name="preProof"
-          type="text"
-          onChange={formik.handleChange}
-          value={formik.values.preProof}
-        />
-      </div>
-      <div>
-        <label htmlFor="inEther">In Ether</label>
-        <input
-          id="inEther"
-          name="inEther"
-          type="checkbox"
-          onChange={formik.handleChange}
-          checked={formik.values.inEther}
-        />
-      </div>
-
-      <Web3Button
-        contractAddress="0x3A3aB8A753d8E490b02941d7Dc86C04Aa392E239"
-        action={(contract) => {
-          contract.call(
-            "makeNewGoal",
-            formik.values.description,
-            formik.values.verificationCriteria,
-            formik.values.inEther,
-            formik.values.amount,
-            formik.values.token,
-            formik.values.deadline,
-            formik.values.deadline
-          );
-        }}
-      >
-        makeNewGoal
-      </Web3Button>
+      {formStep === 4 && (
+        <div className="flex w-100 container mx-auto px-8 pt-4">
+          <div className="flex grow">
+            <div className="w-1/2 flex justify-center">
+              <Image
+                width={600}
+                height={600}
+                src="/heroimageLensGoal.png"
+                alt=""
+              ></Image>
+            </div>
+            <div className="flex flex-col grow justify-center items-center">
+              <div className="mb-8">
+                <h2 className="text-center text-3xl">
+                  What will be your
+                  <span className="block">PREPROOF?</span>
+                </h2>
+              </div>
+              <div className="self-stretch mb-8">
+                <textarea
+                  id="preProof"
+                  name="preProof"
+                  onChange={formik.handleChange}
+                  value={formik.values.preProof}
+                  rows={5}
+                  className="w-full px-4 py-2 text-gray-700 border rounded-lg drop-shadow-lg focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div className="flex self-stretch justify-between">
+                <Button cb={prevStep} text="PREV"></Button>
+                <Button cb={nextStep} text="NEXT"></Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {formStep === 5 && (
+        <div className="flex w-100 container mx-auto px-8 pt-4">
+          <div className="flex grow">
+            <div className="w-1/2 flex justify-center">
+              <Image
+                width={600}
+                height={600}
+                src="/heroimageLensGoal.png"
+                alt=""
+              ></Image>
+            </div>
+            <div className="flex flex-col grow justify-center items-center">
+              <div className="mb-8">
+                <h2 className="text-center text-3xl">
+                  Almost finished!
+                  <span className="block">
+                    Approve LensGoal contract to accept {formik.values.amount}{" "}
+                    of yours{" "}
+                    {whitelistedTokensByAddress[formik.values.token].symbol}{" "}
+                    tokens
+                  </span>
+                </h2>
+              </div>
+              <div>
+                <Web3Button
+                  contractAddress={
+                    whitelistedTokensByAddress[formik.values.token].address
+                  }
+                  action={(contract) => {
+                    contract.call(
+                      "approve",
+                      LENS_GOAL_CONTRACT_ADDRESS,
+                      formik.values.amount
+                    );
+                  }}
+                >
+                  Approve
+                </Web3Button>
+              </div>
+              <div className="flex self-stretch justify-between">
+                <Button cb={prevStep} text="PREV"></Button>
+                <Button cb={nextStep} text="NEXT"></Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {formStep === 6 && (
+        <div className="flex w-100 container mx-auto px-8 pt-4">
+          <div className="flex grow">
+            <div className="w-1/2 flex justify-center">
+              <Image
+                width={600}
+                height={600}
+                src="/heroimageLensGoal.png"
+                alt=""
+              ></Image>
+            </div>
+            <div className="flex flex-col grow justify-center items-center">
+              <div className="mb-8">
+                <h2 className="text-center text-3xl">That's it!</h2>
+              </div>
+              <div>
+                <Web3Button
+                  contractAddress={LENS_GOAL_CONTRACT_ADDRESS}
+                  action={(contract) => {
+                    contract.call(
+                      "makeNewGoal",
+                      formik.values.description,
+                      formik.values.verificationCriteria,
+                      formik.values.token === "ETH" ? true : false,
+                      formik.values.amount,
+                      formik.values.token,
+                      Math.floor(formik.values.deadline.getTime() / 1000),
+                      formik.values.preProof
+                    );
+                  }}
+                >
+                  Create Goal!
+                </Web3Button>
+              </div>
+              <div className="flex self-stretch justify-between">
+                <Button cb={prevStep} text="PREV"></Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }
