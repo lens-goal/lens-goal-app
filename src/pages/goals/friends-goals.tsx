@@ -9,12 +9,17 @@ import GoalCard from '../../components/GoalCard';
 import { UseQueryResult } from '@tanstack/react-query';
 import { GoalsByUserAndVotingStatus } from '../../types/types';
 
-export type GoalStatus = 'complete' | 'voting' | 'ongoing'
+export enum GoalStatus  {
+  'pending',
+  'open',
+  'closed'
+} 
+// 'complete' | 'voting' | 'ongoing'
 
 export default function FriendsGoals
 () {
   const address = useAddress();
-  const [goalStatus, setGoalStatus] = useState<GoalStatus>('voting')
+  const [goalStatus, setGoalStatus] = useState<GoalStatus>(GoalStatus.pending)
   const [addresses, setAddresses] = useState<string[]>([])
 
   const { isLoading, error, data } = useFollowingQuery(
@@ -31,7 +36,7 @@ export default function FriendsGoals
   );
 
   const { contract } = useContract("0xDCFa9da3e6e4d994Dc3E8D42cabfe86Afd34F857");
-  const { data: goalsData, isLoading: goalsLoading } : UseQueryResult<GoalsByUserAndVotingStatus, unknown> = useContractRead(contract, "getGoalsByUsersAndVotingStatus", addresses, 1)
+  const { data: goalsData, isLoading: goalsLoading } : UseQueryResult<GoalsByUserAndVotingStatus, unknown> = useContractRead(contract, "getGoalsByUsersAndVotingStatus", addresses, goalStatus)
   
 
   useEffect(()=>{
@@ -53,9 +58,9 @@ export default function FriendsGoals
         <OracleHero/>
       </div>
       <div className='flex justify-center'>
-        <Button text='Complete' cb={()=>setGoalStatus('complete')}></Button>
-        <Button text='Voting' cb={()=>setGoalStatus('voting')}></Button>
-        <Button text='Ongoing' cb={()=>setGoalStatus('ongoing')}></Button>
+        <Button text='Complete' cb={()=>setGoalStatus(GoalStatus.pending)}></Button>
+        <Button text='Voting' cb={()=>setGoalStatus(GoalStatus.open)}></Button>
+        <Button text='Ongoing' cb={()=>setGoalStatus(GoalStatus.closed)}></Button>
       </div>
       {data?.following.items.map(({profile})=><div className='mb-4' key={profile.ownedBy}>
       <GoalCard profile={profile}/>
