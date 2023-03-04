@@ -13,11 +13,6 @@ export default function Header() {
           <Link href="/goals/friends-goals">Frens' Goals</Link>
           <Link href="/goals/group-goals">Group Goals</Link>
           <Link href="/Evidence">Evidence</Link>
-          <Link href={"/"}>
-            <img src="/logo.png" alt="logo" className={styles.logo} />
-          </Link>
-
-          {/* <Link href={"/create"}>Create</Link> */}
         </div>
 
         <div className={styles.right}>
