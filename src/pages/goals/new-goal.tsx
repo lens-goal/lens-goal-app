@@ -9,18 +9,28 @@ import {
   whitelistedTokens,
   whitelistedTokensByAddress,
 } from "../../const/whitelisted-tokens";
-import { LENS_GOAL_CONTRACT_ADDRESS } from "../../const/contracts";
+import {
+  LENS_CONTRACT_ABI,
+  LENS_CONTRACT_ADDRESS,
+  LENS_GOAL_CONTRACT_ADDRESS,
+} from "../../const/contracts";
 import { GoalCreatedEventData } from "../../types/types";
 import Modal from "../../components/Modal";
 import { parseDateFromBigNumber } from "../../utils/parseDateFromBigNumber";
+// import { useCreatePost } from "@lens-protocol/react";
+import { useCreatePost } from "../../lib/useCreatePost";
 
 export default function NewGoal() {
+  // const { data, loading } = useActiveProfile();
+  // if(!data) return
+  // const { create, error, isPending } = useCreatePost({ profile: data, upload });
   const [tokensApproved, setTokensApproved] = useState(false);
   const [formStep, setFormStep] = useState(0);
   const [createdGoal, setCreatedGoal] = useState<GoalCreatedEventData | null>(
     null
   );
   const address = useAddress();
+  const { mutateAsync: createPost } = useCreatePost();
 
   const formik = useFormik({
     initialValues: {
@@ -108,7 +118,26 @@ export default function NewGoal() {
               <p>{createdGoal._verificationCriteria}</p>
             </div>
             <div className="flex justify-end">
-              <Button text="Share On Lens!"></Button>
+              <Web3Button
+                contractAddress={LENS_CONTRACT_ADDRESS}
+                contractAbi={LENS_CONTRACT_ABI}
+                action={async () => {
+                  return await createPost({
+                    image: null,
+                    title: "HEY! I just added new goal",
+                    description: `My new goal`,
+                    content: `Description: ${
+                      createdGoal._description
+                    },\n Deadline: ${parseDateFromBigNumber(
+                      createdGoal._deadline
+                    )},\n Verification Criteria: ${
+                      createdGoal._verificationCriteria
+                    }`,
+                  });
+                }}
+              >
+                Share On Lens!
+              </Web3Button>
             </div>
           </div>
         </Modal>

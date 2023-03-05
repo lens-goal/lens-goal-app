@@ -15,6 +15,7 @@
 // cryptocomical.lens       | Designer
 
 pragma solidity 0.8.17;
+pragma experimental ABIEncoderV2;
 
 import "./LensGoalHelpers.sol";
 import "./AutomationCompatible.sol";
@@ -52,6 +53,12 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         PENDING,
         VOTED_TRUE,
         VOTED_FALSE
+    }
+
+    enum VotingStatus {
+        PENDING,
+        OPEN,
+        CLOSED
     }
 
     struct Votes {
@@ -579,5 +586,64 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
                 );
             }
         }
+    }
+
+    function getTimestamp() external view returns (uint256) {
+        return block.timestamp;
+    }
+
+    function isVotingStatus(
+        uint256 _goalId,
+        VotingStatus votingStatus
+    ) internal view returns (bool) {
+        Goal memory goal = goalIdToGoal[_goalId];
+
+        if (votingStatus == VotingStatus.PENDING) {
+            return
+                goal.info.status == Status.PENDING &&
+                block.timestamp < goal.info.deadline;
+        } else if (votingStatus == VotingStatus.OPEN) {
+            return
+                goal.info.status == Status.PENDING &&
+                block.timestamp > goal.info.deadline;
+        } else {
+            return goal.info.status != Status.PENDING;
+        }
+    }
+
+    function getGoalsByUsersAndVotingStatus(
+        address[] memory friends,
+        VotingStatus votingStatus
+    ) external view returns (Goal[] memory) {
+        // 1. First we have to find arrayLength
+        uint256 arrayLength;
+
+        for (uint256 i; i < friends.length; i++) {
+            uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
+
+            for (uint256 j; j < friendGoalIds.length; j++) {
+                if (isVotingStatus(friendGoalIds[j], votingStatus)) {
+                    arrayLength++;
+                }
+            }
+        }
+
+        //3. Now we create array in memory
+        Goal[] memory goalBasicInfos = new Goal[](arrayLength);
+
+        uint256 index;
+
+        for (uint256 i; i < friends.length; i++) {
+            uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
+
+            for (uint256 j; j < friendGoalIds.length; j++) {
+                if (isVotingStatus(friendGoalIds[j], votingStatus)) {
+                    goalBasicInfos[index] = goalIdToGoal[friendGoalIds[j]];
+                    index++;
+                }
+            }
+        }
+
+        return goalBasicInfos;
     }
 }

@@ -11,7 +11,7 @@ import { LENS_CONTRACT_ABI, LENS_CONTRACT_ADDRESS } from "../const/contracts";
 import useLogin from "./auth/useLogin";
 
 type CreatePostArgs = {
-  image: File;
+  image: File | null;
   title: string;
   description: string;
   content: string;
@@ -22,7 +22,7 @@ export function useCreatePost() {
   const { mutateAsync: uploadToIpfs } = useStorageUpload();
   const { profileQuery } = useLensUser();
   const sdk = useSDK();
-  const { mutateAsync: loginUser } = useLogin();
+  // const { mutateAsync: loginUser } = useLogin();
 
   async function createPost({
     image,
@@ -32,7 +32,7 @@ export function useCreatePost() {
   }: CreatePostArgs) {
     console.log("createPost", image, title, description, content);
     // 0. Login
-    await loginUser();
+    // await loginUser();
 
     // 0. Upload the image to IPFS
     const imageIpfsUrl = (await uploadToIpfs({ data: [image] }))[0];
@@ -79,13 +79,22 @@ export function useCreatePost() {
     });
 
     const { domain, types, value } = typedData.createPostTypedData.typedData;
+    console.log('DTS')
+    console.log(domain)
+    console.log(types)
+    console.log(value)
 
     if (!sdk) return;
 
     // 2. Sign the typed data
     const signature = await signTypedDataWithOmmittedTypename(
       sdk,
-      domain,
+      // TODO: Fix this later
+      {
+        ...domain,
+        chainId: 80001,
+        verifyingContract: LENS_CONTRACT_ADDRESS
+      },
       types,
       value
     );
