@@ -280,7 +280,9 @@ export default function NewGoal() {
                     >
                       {Object.values(whitelistedTokens).map((token) => {
                         return (
-                          <option value={token.address}>{token.symbol}</option>
+                          <option key={token.address} value={token.address}>
+                            {token.symbol}
+                          </option>
                         );
                       })}
                       <option value="ETH">ETH</option>
@@ -417,7 +419,7 @@ export default function NewGoal() {
             </div>
             <div className="flex flex-col grow justify-center items-center">
               <div className="mb-8">
-                <h2 className="text-center text-3xl">That's it!</h2>
+                <h2 className="text-center text-3xl">That&apos;s it!</h2>
               </div>
               <div>
                 <Web3Button
