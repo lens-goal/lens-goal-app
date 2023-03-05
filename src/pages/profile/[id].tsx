@@ -77,7 +77,7 @@ export default function ProfilePage({}: Props) {
         {profileData?.profile?.picture?.original?.url && (
           <MediaRenderer
             // @ts-ignore
-            src={profileData.profile.picture.original.url}
+            src={profileData.profile.picture?.original.url}
             alt={profileData.profile.name || profileData.profile.handle || ""}
             className={styles.profilePictureContainer}
           />
