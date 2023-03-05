@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
-import { useAddress, useContract, Web3Button } from "@thirdweb-dev/react";
+import {
+  useAddress,
+  useContract,
+  useSDK,
+  Web3Button,
+} from "@thirdweb-dev/react";
 import { useFormik } from "formik";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -10,6 +15,7 @@ import {
   whitelistedTokensByAddress,
 } from "../../const/whitelisted-tokens";
 import {
+  ERC20_CONTRACT_ABI,
   LENS_CONTRACT_ABI,
   LENS_CONTRACT_ADDRESS,
   LENS_GOAL_CONTRACT_ADDRESS,
@@ -17,13 +23,10 @@ import {
 import { GoalCreatedEventData } from "../../types/types";
 import Modal from "../../components/Modal";
 import { parseDateFromBigNumber } from "../../utils/parseDateFromBigNumber";
-// import { useCreatePost } from "@lens-protocol/react";
 import { useCreatePost } from "../../lib/useCreatePost";
 
 export default function NewGoal() {
-  // const { data, loading } = useActiveProfile();
-  // if(!data) return
-  // const { create, error, isPending } = useCreatePost({ profile: data, upload });
+  const sdk = useSDK();
   const [tokensApproved, setTokensApproved] = useState(false);
   const [formStep, setFormStep] = useState(0);
   const [createdGoal, setCreatedGoal] = useState<GoalCreatedEventData | null>(
@@ -47,10 +50,6 @@ export default function NewGoal() {
       console.log(JSON.stringify(values, null, 2));
     },
   });
-
-  const { contract: erc20Contract } = useContract(
-    whitelistedTokensByAddress[formik.values.token].address
-  );
 
   const { contract: lensGoalContract } = useContract(
     LENS_GOAL_CONTRACT_ADDRESS
@@ -76,16 +75,26 @@ export default function NewGoal() {
   }
 
   useEffect(() => {
-    if (!erc20Contract) return;
-    erc20Contract.events.addEventListener("Approval", (event) => {
-      if (
-        event.data.owner === address &&
-        event.data.spender === LENS_GOAL_CONTRACT_ADDRESS
-      ) {
-        setTokensApproved(true);
-      }
-    });
-  }, [erc20Contract]);
+    async function getErc20Contract() {
+      const erc20Contract = await sdk?.getContractFromAbi(
+        whitelistedTokensByAddress[formik.values.token].address,
+        // Pass in the "abi" field from the JSON file
+        ERC20_CONTRACT_ABI
+      );
+
+      if (!erc20Contract) return;
+      erc20Contract.events.addEventListener("Approval", (event) => {
+        if (
+          event.data.owner === address &&
+          event.data.spender === LENS_GOAL_CONTRACT_ADDRESS
+        ) {
+          setTokensApproved(true);
+        }
+      });
+    }
+
+    getErc20Contract();
+  }, [whitelistedTokensByAddress[formik.values.token].address]);
 
   useEffect(() => {
     if (!lensGoalContract) return;
@@ -285,7 +294,7 @@ export default function NewGoal() {
                           </option>
                         );
                       })}
-                      <option value="ETH">ETH</option>
+                      <option value="MATIC">MATIC</option>
                     </select>
                   </div>
                   <div className="flex flex-col">
@@ -350,7 +359,7 @@ export default function NewGoal() {
           </div>
         </div>
       )}
-      {formStep === 5 && formik.values.token !== "ETH" && (
+      {formStep === 5 && formik.values.token !== "MATIC" && (
         <div className="flex w-100 container mx-auto px-8 pt-4">
           <div className="flex grow">
             <div className="w-1/2 flex justify-center">
@@ -385,6 +394,7 @@ export default function NewGoal() {
                     contractAddress={
                       whitelistedTokensByAddress[formik.values.token].address
                     }
+                    contractAbi={ERC20_CONTRACT_ABI}
                     action={(contract) => {
                       contract.call(
                         "approve",
@@ -406,7 +416,7 @@ export default function NewGoal() {
         </div>
       )}
       {(formStep === 6 ||
-        (formStep === 5 && formik.values.token === "ETH")) && (
+        (formStep === 5 && formik.values.token === "MATIC")) && (
         <div className="flex w-100 container mx-auto px-8 pt-4">
           <div className="flex grow">
             <div className="w-1/2 flex justify-center">
@@ -429,7 +439,7 @@ export default function NewGoal() {
                       "makeNewGoal",
                       formik.values.description,
                       formik.values.verificationCriteria,
-                      formik.values.token === "ETH" ? true : false,
+                      formik.values.token === "MATIC" ? true : false,
                       formik.values.amount,
                       formik.values.token,
                       Math.floor(formik.values.deadline.getTime() / 1000),

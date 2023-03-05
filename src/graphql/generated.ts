@@ -428,6 +428,12 @@ export enum CommentOrderingTypes {
   Ranking = 'RANKING'
 }
 
+/** The comment ranking filter types */
+export enum CommentRankingFilter {
+  NoneRelevant = 'NONE_RELEVANT',
+  Relevant = 'RELEVANT'
+}
+
 /** The gated publication access criteria contract types */
 export enum ContractType {
   Erc20 = 'ERC20',
@@ -3348,6 +3354,8 @@ export type PublicationsQueryRequest = {
   commentsOf?: InputMaybe<Scalars['InternalPublicationId']>;
   /** The comment ordering type - only used when you use commentsOf */
   commentsOfOrdering?: InputMaybe<CommentOrderingTypes>;
+  /** The comment ranking filter, you can use  - only used when you use commentsOf + commentsOfOrdering=ranking */
+  commentsRankingFilter?: InputMaybe<CommentRankingFilter>;
   cursor?: InputMaybe<Scalars['Cursor']>;
   customFilters?: InputMaybe<Array<CustomFiltersTypes>>;
   limit?: InputMaybe<Scalars['LimitScalar']>;
