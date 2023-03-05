@@ -1,11 +1,24 @@
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: {
-    version: '0.8.17',
+    compilers: [
+      {
+        version: '0.8.17',
+      },
+      // {
+      //   version: "0.4.8",
+      // },
+      // {
+      //   version: "0.4.11",
+      // },
+      // {
+      //   version: "0.4.24",
+      // },
+    ],
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
+        runs: 10,
       },
     },
   },

@@ -84,8 +84,13 @@ export default function NewGoal() {
 
       if (!erc20Contract) return;
       erc20Contract.events.addEventListener("Approval", (event) => {
+        console.log(event);
+        console.log(address);
+        console.log(event.data.owner);
+        console.log(LENS_GOAL_CONTRACT_ADDRESS);
+        console.log(event.data.spender);
         if (
-          event.data.owner === address &&
+          // event.data.owner === address &&
           event.data.spender === LENS_GOAL_CONTRACT_ADDRESS
         ) {
           setTokensApproved(true);

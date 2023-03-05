@@ -21,9 +21,6 @@ import "./LensGoalHelpers.sol";
 import "./AutomationCompatible.sol";
 import "./AutomationCompatibleInterface.sol";
 
-// import "./cl-functions/dev/functions/FunctionsClient.sol";
-// import "./cl-functions/IFC.sol";
-
 contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     // wallet where funds will be transfered in case of goal failure
     // is currently the undefined, edit later
@@ -69,7 +66,6 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         uint256 deadline;
         Status status;
         uint256 goalId;
-        Charity charity;
     }
 
     struct Goal {
@@ -81,9 +77,8 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     }
 
     struct Charity {
+        address account;
         string name;
-        address charityAddress;
-        bool isValid;
     }
 
     struct AdditionalStake {
@@ -107,26 +102,8 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     // maps goal to all stakeId of stakes for that goal
     mapping(uint256 => uint256[]) goalIdToStakeIds;
 
-    address[] owners = [
-        0x2cF29308548E6E15056FA0C8dE1fd7087053e5Ae,
-        0x327def07a8e64E001E23a96E90955eDC091Ee066,
-        0x74B4B8C7cb9A594a6440965f982deF10BB9570b9
-    ];
-    mapping(address => bool) isAddressOwner;
-    address[] charities = [
-        0x8718122A0c268ef5efeA7771E0e6217913fC0807,
-        0x10E1439455BD2624878b243819E31CfEE9eb721C,
-        0xB6989F472Bef8931e6Ca882b1f875539b7D5DA19
-    ];
-    // used to identify which charity the funds are sent to
-    mapping(address => Charity) addressToCharity;
-
-    // LINK token address on polygon
-    // used for subscription renewals
-    address linkTokenAddress = 0x326C977E6efc84E512bB9C30f76E30c160eD06FB;
-    // address to which chainlink req. functions will be sent
-    // deploy FunctionsConsumer.sol before LensGoal.sol and input contract address in constructor
-    address clFunctionsConsumerAddress;
+    // address[] public charityList;
+    // mapping(address => Charity) public charityIdToCharity;
 
     // will be incremented when new goals/stakes are published
     uint256 goalId;
@@ -168,64 +145,25 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
 
     event VoteCasted(address indexed _voter, bool _vote, uint256 _goalId);
 
-    modifier onlyOwners() {
-        require(isAddressOwner[msg.sender] == true);
-        _;
-    }
-
-    constructor() {
-        // define owner mapping
-        // isAddressOwner[owners[0]] = true;
-        // isAddressOwner[owners[1]] = true;
-        // isAddressOwner[owners[2]] = true;
-        // // define charities
-        // addressToCharity[charities[0]] = Charity(
-        //     "Save the Children",
-        //     charities[0],
-        //     true
-        // );
-        // addressToCharity[charities[1]] = Charity(
-        //     "Unchain Ukraine",
-        //     charities[1],
-        //     true
-        // );
-        // addressToCharity[charities[2]] = Charity(
-        //     "Giveth House",
-        //     charities[2],
-        //     true
-        // );
-    }
-
-    // function updateClFunctionsConsumerAddr(address newAddr) public onlyOwners {
-    //     clFunctionsConsumerAddress = newAddr;
+    // function addCharity(address account, string calldata name) external {
+    //     if (charityIdToCharity[account].account == address(0)) {
+    //         charityList.push(account);
+    //         charityIdToCharity[account] = Charity(account, name);
+    //     }
     // }
 
-    // // update chainlink oracle address
-    // function updateOracleAddress(address oracle) external onlyOwners {
-    //     IFunctionsConsumer(clFunctionsConsumerAddress).updateOracleAddress(
-    //         oracle
-    //     );
+    // function getCharities()
+    //     external
+    //     view
+    //     onlyOwners
+    //     returns (Charity[] memory)
+    // {
+    //     Charity[] memory charities = new Charity[](charityList.length);
+    //     for (uint256 i; i < charityList.length; i++) {
+    //         charities[i] = charityIdToCharity[charityList[i]];
+    //     }
+    //     return charities;
     // }
-
-    function addCharity(address account, string calldata name) external {
-        if (addressToCharity[account].charityAddress == address(0)) {
-            charities.push(account);
-            addressToCharity[account] = Charity(name, account, true);
-        }
-    }
-
-    function getCharities()
-        external
-        view
-        onlyOwners
-        returns (Charity[] memory)
-    {
-        Charity[] memory _charities = new Charity[](charities.length);
-        for (uint256 i; i < charities.length; i++) {
-            _charities[i] = addressToCharity[charities[i]];
-        }
-        return _charities;
-    }
 
     // allows user to make a new goal
     function makeNewGoal(
@@ -235,11 +173,8 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         uint256 tokenAmount,
         address tokenAddress,
         uint256 timestampEnd,
-        string memory preProof,
-        address charityAddress
+        string memory preProof
     ) external payable {
-        // make sure charity is valid
-        require(addressToCharity[charityAddress].isValid == true);
         if (inEther) {
             // require(msg.value > 0, "msg.value must be greater than 0");
             // why user can stake nothing:
@@ -252,8 +187,7 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
                     verificationCriteria,
                     timestampEnd,
                     Status.PENDING,
-                    goalId,
-                    addressToCharity[charityAddress]
+                    goalId
                 ),
                 defaultEtherStake(),
                 Votes(0, 0),
@@ -289,8 +223,7 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
                     verificationCriteria,
                     timestampEnd,
                     Status.PENDING,
-                    goalId,
-                    addressToCharity[charityAddress]
+                    goalId
                 ),
                 // get etherstake struct
                 defaultEtherStake(),
@@ -335,66 +268,66 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     }
 
     // allows users to make additional stakes
-    function makeNewStake(
-        /* which goal the stake is for**/ uint256 _goalId,
-        bool inEther,
-        uint256 tokenAmount,
-        address tokenAddress
-    ) external payable {
-        if (inEther) {
-            // cannot stake 0 tokens
-            require(msg.value > 0, "msg.value must be greater than 0");
-            AdditionalStake memory stake = AdditionalStake(
-                defaultEtherStake(),
-                stakeId,
-                _goalId,
-                msg.sender,
-                false
-            );
-            // push stakeId
-            userToStakeIds[msg.sender].push(stakeId);
-            // add stake to goal
-            goalIdToStakeIds[_goalId].push(stakeId);
-            // define stake in mapping
-            stakeIdToStake[stakeId] = stake;
-            emit AdditionalStakeCreated(
-                msg.sender,
-                TokenType.ETHER,
-                msg.value,
-                address(0),
-                stakeId,
-                _goalId
-            );
-            // increment stakeId for future use
-            stakeId++;
-        } else {
-            // cannot stake 0 tokens
-            require(tokenAmount > 0, "tokenAmount must be greater than 0");
-            AdditionalStake memory stake = AdditionalStake(
-                Stake(TokenType.ERC20, tokenAmount, tokenAddress),
-                stakeId,
-                _goalId,
-                msg.sender,
-                false
-            );
-            // push stakeId
-            userToStakeIds[msg.sender].push(stakeId);
-            // add stake to goal
-            goalIdToStakeIds[_goalId].push(stakeId);
-            // define stake in mapping
-            stakeIdToStake[stakeId] = stake;
-            emit AdditionalStakeCreated(
-                msg.sender,
-                TokenType.ERC20,
-                tokenAmount,
-                tokenAddress,
-                stakeId,
-                _goalId
-            );
-            // increment stakeId for future use
-            stakeId++;
-        }
-    }
+    // function makeNewStake(
+    //     /* which goal the stake is for**/ uint256 _goalId,
+    //     bool inEther,
+    //     uint256 tokenAmount,
+    //     address tokenAddress
+    // ) external payable {
+    //     if (inEther) {
+    //         // cannot stake 0 tokens
+    //         require(msg.value > 0, "msg.value must be greater than 0");
+    //         AdditionalStake memory stake = AdditionalStake(
+    //             defaultEtherStake(),
+    //             stakeId,
+    //             _goalId,
+    //             msg.sender,
+    //             false
+    //         );
+    //         // push stakeId
+    //         userToStakeIds[msg.sender].push(stakeId);
+    //         // add stake to goal
+    //         goalIdToStakeIds[_goalId].push(stakeId);
+    //         // define stake in mapping
+    //         stakeIdToStake[stakeId] = stake;
+    //         emit AdditionalStakeCreated(
+    //             msg.sender,
+    //             TokenType.ETHER,
+    //             msg.value,
+    //             address(0),
+    //             stakeId,
+    //             _goalId
+    //         );
+    //         // increment stakeId for future use
+    //         stakeId++;
+    //     } else {
+    //         // cannot stake 0 tokens
+    //         require(tokenAmount > 0, "tokenAmount must be greater than 0");
+    //         AdditionalStake memory stake = AdditionalStake(
+    //             Stake(TokenType.ERC20, tokenAmount, tokenAddress),
+    //             stakeId,
+    //             _goalId,
+    //             msg.sender,
+    //             false
+    //         );
+    //         // push stakeId
+    //         userToStakeIds[msg.sender].push(stakeId);
+    //         // add stake to goal
+    //         goalIdToStakeIds[_goalId].push(stakeId);
+    //         // define stake in mapping
+    //         stakeIdToStake[stakeId] = stake;
+    //         emit AdditionalStakeCreated(
+    //             msg.sender,
+    //             TokenType.ERC20,
+    //             tokenAmount,
+    //             tokenAddress,
+    //             stakeId,
+    //             _goalId
+    //         );
+    //         // increment stakeId for future use
+    //         stakeId++;
+    //     }
+    // }
 
     // users can write or link to proof on chain to convince voters to vote positevely
     function writeProofs(
@@ -412,11 +345,11 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     }
 
     // get info of goal (for front end)
-    function getGoalBasicInfo(
-        uint256 _goalId
-    ) public view returns (GoalBasicInfo memory) {
-        return goalIdToGoal[_goalId].info;
-    }
+    // function getGoalBasicInfo(
+    //     uint256 _goalId
+    // ) public view returns (GoalBasicInfo memory) {
+    //     return goalIdToGoal[_goalId].info;
+    // }
 
     // vote on goal
     function vote(
@@ -450,32 +383,32 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     }
 
     // allows stakers to withdraw stake so that they don't purposely vote negatively to get it back
-    function withdrawStake(uint256 _stakeId) external {
-        AdditionalStake memory stake = stakeIdToStake[_stakeId];
-        // identity check
-        require(stake.staker == msg.sender, "not staker");
-        // safety check
-        require(stake.withdrawn == false, "stake already withdrawn");
-        // if stake is in ether, send ether back to msg.sender and set withdrawn to true
-        if (stake.stake.tokenType == TokenType.ETHER) {
-            stakeIdToStake[_stakeId].withdrawn = true;
-            payable(msg.sender).transfer(stake.stake.amount);
-        } else {
-            stakeIdToStake[_stakeId].withdrawn = true;
-            IERC20(stake.stake.tokenAddress).transfer(
-                msg.sender,
-                stake.stake.amount
-            );
-        }
-        emit StakeWithdrawn(
-            stake.stake.tokenType,
-            stake.stake.amount,
-            stake.stake.tokenAddress,
-            stake.stakeId,
-            stake.goalId,
-            stake.staker
-        );
-    }
+    // function withdrawStake(uint256 _stakeId) external {
+    //     AdditionalStake memory stake = stakeIdToStake[_stakeId];
+    //     // identity check
+    //     require(stake.staker == msg.sender, "not staker");
+    //     // safety check
+    //     require(stake.withdrawn == false, "stake already withdrawn");
+    //     // if stake is in ether, send ether back to msg.sender and set withdrawn to true
+    //     if (stake.stake.tokenType == TokenType.ETHER) {
+    //         stakeIdToStake[_stakeId].withdrawn = true;
+    //         payable(msg.sender).transfer(stake.stake.amount);
+    //     } else {
+    //         stakeIdToStake[_stakeId].withdrawn = true;
+    //         IERC20(stake.stake.tokenAddress).transfer(
+    //             msg.sender,
+    //             stake.stake.amount
+    //         );
+    //     }
+    //     emit StakeWithdrawn(
+    //         stake.stake.tokenType,
+    //         stake.stake.amount,
+    //         stake.stake.tokenAddress,
+    //         stake.stakeId,
+    //         stake.goalId,
+    //         stake.staker
+    //     );
+    // }
 
     function votingWindowClosedAndStatusIsPending(
         uint256 _goalId
@@ -640,10 +573,6 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         }
     }
 
-    function getTimestamp() external view returns (uint256) {
-        return block.timestamp;
-    }
-
     function isVotingStatus(
         uint256 _goalId,
         VotingStatus votingStatus
@@ -698,28 +627,4 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
 
         return goalBasicInfos;
     }
-
-    // Chainlink request fuction
-
-    // function executeRequestAndGetReturns(
-    //     string calldata source,
-    //     bytes calldata secrets,
-    //     Functions.Location secretsLocation,
-    //     string[] calldata args,
-    //     uint64 subscriptionId,
-    //     uint32 gasLimit
-    // ) public returns (bytes memory response, bytes memory error) {
-    //     IFunctionsConsumer(clFunctionsConsumerAddress).executeRequest(
-    //         source,
-    //         secrets,
-    //         secretsLocation,
-    //         args,
-    //         subscriptionId,
-    //         gasLimit
-    //     );
-    //     return (
-    //         IFunctionsConsumer(clFunctionsConsumerAddress)
-    //             .getLatestReponseAndError()
-    //     );
-    // }
 }

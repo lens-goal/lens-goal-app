@@ -22,7 +22,7 @@ export function useCreatePost() {
   const { mutateAsync: uploadToIpfs } = useStorageUpload();
   const { profileQuery } = useLensUser();
   const sdk = useSDK();
-  // const { mutateAsync: loginUser } = useLogin();
+  const { mutateAsync: loginUser } = useLogin();
 
   async function createPost({
     image,
@@ -32,7 +32,7 @@ export function useCreatePost() {
   }: CreatePostArgs) {
     console.log("createPost", image, title, description, content);
     // 0. Login
-    // await loginUser();
+    await loginUser();
 
     // 0. Upload the image to IPFS
     const imageIpfsUrl = (await uploadToIpfs({ data: [image] }))[0];
@@ -89,12 +89,8 @@ export function useCreatePost() {
     // 2. Sign the typed data
     const signature = await signTypedDataWithOmmittedTypename(
       sdk,
-      // TODO: Fix this later
-      {
-        ...domain,
-        chainId: 80001,
-        verifyingContract: LENS_CONTRACT_ADDRESS
-      },
+      domain
+      ,
       types,
       value
     );

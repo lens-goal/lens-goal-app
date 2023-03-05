@@ -26,7 +26,7 @@ export const whitelistedTokens: {[key:string]:WhiteListedToken} = {
         symbol: 'DAI'
     },
     'ABC': {
-        address: '0x294210dDbC38114dD6EE4959B797A0D2171f220b',
+        address: '0x9AFA555d4c42f3070baf77bdE27bd833D5383593',
         name: 'ABCToken',
         symbol: "ABC"
     },

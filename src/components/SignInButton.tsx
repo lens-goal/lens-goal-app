@@ -28,7 +28,7 @@ export default function SignInButton({}: Props) {
   // 2. User needs to switch network to Polygon
   if (isOnWrongNetwork) {
     return (
-      <button onClick={() => switchNetwork?.(ChainId.Mumbai)}>
+      <button onClick={() => switchNetwork?.(ChainId.Polygon)}>
         Switch Network
       </button>
     );
