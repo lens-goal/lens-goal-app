@@ -15,20 +15,43 @@
 // cryptocomical.lens       | Designer
 
 pragma solidity 0.8.17;
-pragma experimental ABIEncoderV2;
 
 import "./LensGoalHelpers.sol";
 import "./AutomationCompatible.sol";
 import "./AutomationCompatibleInterface.sol";
-
-// import "./cl-functions/dev/functions/FunctionsClient.sol";
-// import "./cl-functions/IFC.sol";
+import "./cl-functions/dev/functions/FunctionsClient.sol";
+import "./cl-functions/IFC.sol";
 
 contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     // wallet where funds will be transfered in case of goal failure
     // is currently the undefined, edit later
 
     address communityWallet;
+    // LINK token address on polygon
+    // used for subscription renewals
+    address linkTokenAddress = 0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39;
+    // address to which chainlink req. functions will be sent
+    // deploy FunctionsConsumer.sol before LensGoal.sol and input contract address in constructor
+    address clFunctionsConsumerAddress;
+    // only these addresses may call certain functions
+    address[] owners = [
+        0x2cF29308548E6E15056FA0C8dE1fd7087053e5Ae,
+        0x327def07a8e64E001E23a96E90955eDC091Ee066,
+        0x74B4B8C7cb9A594a6440965f982deF10BB9570b9
+    ];
+
+    modifier onlyOwners() {
+        require(
+            msg.sender == owners[0] ||
+                msg.sender == owners[1] ||
+                msg.sender == owners[2]
+        );
+        _;
+    }
+
+    function updateClFunctionsConsumerAddr(address newAddr) public onlyOwners {
+        clFunctionsConsumerAddress = newAddr;
+    }
 
     // used to identify whether stake is in ether or erc20
     enum TokenType {
@@ -41,12 +64,6 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         PENDING,
         VOTED_TRUE,
         VOTED_FALSE
-    }
-
-    enum VotingStatus {
-        PENDING,
-        OPEN,
-        CLOSED
     }
 
     struct Votes {
@@ -69,7 +86,6 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         uint256 deadline;
         Status status;
         uint256 goalId;
-        Charity charity;
     }
 
     struct Goal {
@@ -78,12 +94,6 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         Votes votes;
         string preProof;
         string proof;
-    }
-
-    struct Charity {
-        string name;
-        address charityAddress;
-        bool isValid;
     }
 
     struct AdditionalStake {
@@ -106,27 +116,6 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     mapping(uint256 => AdditionalStake) public stakeIdToStake;
     // maps goal to all stakeId of stakes for that goal
     mapping(uint256 => uint256[]) goalIdToStakeIds;
-
-    address[] owners = [
-        0x2cF29308548E6E15056FA0C8dE1fd7087053e5Ae,
-        0x327def07a8e64E001E23a96E90955eDC091Ee066,
-        0x74B4B8C7cb9A594a6440965f982deF10BB9570b9
-    ];
-    mapping(address => bool) isAddressOwner;
-    address[] charities = [
-        0x8718122A0c268ef5efeA7771E0e6217913fC0807,
-        0x10E1439455BD2624878b243819E31CfEE9eb721C,
-        0xB6989F472Bef8931e6Ca882b1f875539b7D5DA19
-    ];
-    // used to identify which charity the funds are sent to
-    mapping(address => Charity) addressToCharity;
-
-    // LINK token address on polygon
-    // used for subscription renewals
-    address linkTokenAddress = 0x326C977E6efc84E512bB9C30f76E30c160eD06FB;
-    // address to which chainlink req. functions will be sent
-    // deploy FunctionsConsumer.sol before LensGoal.sol and input contract address in constructor
-    address clFunctionsConsumerAddress;
 
     // will be incremented when new goals/stakes are published
     uint256 goalId;
@@ -168,65 +157,6 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
 
     event VoteCasted(address indexed _voter, bool _vote, uint256 _goalId);
 
-    modifier onlyOwners() {
-        require(isAddressOwner[msg.sender] == true);
-        _;
-    }
-
-    constructor() {
-        // define owner mapping
-        // isAddressOwner[owners[0]] = true;
-        // isAddressOwner[owners[1]] = true;
-        // isAddressOwner[owners[2]] = true;
-        // // define charities
-        // addressToCharity[charities[0]] = Charity(
-        //     "Save the Children",
-        //     charities[0],
-        //     true
-        // );
-        // addressToCharity[charities[1]] = Charity(
-        //     "Unchain Ukraine",
-        //     charities[1],
-        //     true
-        // );
-        // addressToCharity[charities[2]] = Charity(
-        //     "Giveth House",
-        //     charities[2],
-        //     true
-        // );
-    }
-
-    // function updateClFunctionsConsumerAddr(address newAddr) public onlyOwners {
-    //     clFunctionsConsumerAddress = newAddr;
-    // }
-
-    // // update chainlink oracle address
-    // function updateOracleAddress(address oracle) external onlyOwners {
-    //     IFunctionsConsumer(clFunctionsConsumerAddress).updateOracleAddress(
-    //         oracle
-    //     );
-    // }
-
-    function addCharity(address account, string calldata name) external {
-        if (addressToCharity[account].charityAddress == address(0)) {
-            charities.push(account);
-            addressToCharity[account] = Charity(name, account, true);
-        }
-    }
-
-    function getCharities()
-        external
-        view
-        onlyOwners
-        returns (Charity[] memory)
-    {
-        Charity[] memory _charities = new Charity[](charities.length);
-        for (uint256 i; i < charities.length; i++) {
-            _charities[i] = addressToCharity[charities[i]];
-        }
-        return _charities;
-    }
-
     // allows user to make a new goal
     function makeNewGoal(
         string memory description,
@@ -235,11 +165,8 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         uint256 tokenAmount,
         address tokenAddress,
         uint256 timestampEnd,
-        string memory preProof,
-        address charityAddress
+        string memory preProof
     ) external payable {
-        // make sure charity is valid
-        require(addressToCharity[charityAddress].isValid == true);
         if (inEther) {
             // require(msg.value > 0, "msg.value must be greater than 0");
             // why user can stake nothing:
@@ -252,8 +179,7 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
                     verificationCriteria,
                     timestampEnd,
                     Status.PENDING,
-                    goalId,
-                    addressToCharity[charityAddress]
+                    goalId
                 ),
                 defaultEtherStake(),
                 Votes(0, 0),
@@ -289,8 +215,7 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
                     verificationCriteria,
                     timestampEnd,
                     Status.PENDING,
-                    goalId,
-                    addressToCharity[charityAddress]
+                    goalId
                 ),
                 // get etherstake struct
                 defaultEtherStake(),
@@ -640,86 +565,27 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         }
     }
 
-    function getTimestamp() external view returns (uint256) {
-        return block.timestamp;
-    }
-
-    function isVotingStatus(
-        uint256 _goalId,
-        VotingStatus votingStatus
-    ) internal view returns (bool) {
-        Goal memory goal = goalIdToGoal[_goalId];
-
-        if (votingStatus == VotingStatus.PENDING) {
-            return
-                goal.info.status == Status.PENDING &&
-                block.timestamp < goal.info.deadline;
-        } else if (votingStatus == VotingStatus.OPEN) {
-            return
-                goal.info.status == Status.PENDING &&
-                block.timestamp > goal.info.deadline;
-        } else {
-            return goal.info.status != Status.PENDING;
-        }
-    }
-
-    function getGoalsByUsersAndVotingStatus(
-        address[] memory friends,
-        VotingStatus votingStatus
-    ) external view returns (Goal[] memory) {
-        // 1. First we have to find arrayLength
-        uint256 arrayLength;
-
-        for (uint256 i; i < friends.length; i++) {
-            uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
-
-            for (uint256 j; j < friendGoalIds.length; j++) {
-                if (isVotingStatus(friendGoalIds[j], votingStatus)) {
-                    arrayLength++;
-                }
-            }
-        }
-
-        //3. Now we create array in memory
-        Goal[] memory goalBasicInfos = new Goal[](arrayLength);
-
-        uint256 index;
-
-        for (uint256 i; i < friends.length; i++) {
-            uint256[] memory friendGoalIds = userToGoalIds[friends[i]];
-
-            for (uint256 j; j < friendGoalIds.length; j++) {
-                if (isVotingStatus(friendGoalIds[j], votingStatus)) {
-                    goalBasicInfos[index] = goalIdToGoal[friendGoalIds[j]];
-                    index++;
-                }
-            }
-        }
-
-        return goalBasicInfos;
-    }
-
     // Chainlink request fuction
 
-    // function executeRequestAndGetReturns(
-    //     string calldata source,
-    //     bytes calldata secrets,
-    //     Functions.Location secretsLocation,
-    //     string[] calldata args,
-    //     uint64 subscriptionId,
-    //     uint32 gasLimit
-    // ) public returns (bytes memory response, bytes memory error) {
-    //     IFunctionsConsumer(clFunctionsConsumerAddress).executeRequest(
-    //         source,
-    //         secrets,
-    //         secretsLocation,
-    //         args,
-    //         subscriptionId,
-    //         gasLimit
-    //     );
-    //     return (
-    //         IFunctionsConsumer(clFunctionsConsumerAddress)
-    //             .getLatestReponseAndError()
-    //     );
-    // }
+    function executeRequestAndGetReturns(
+        string calldata source,
+        bytes calldata secrets,
+        Functions.Location secretsLocation,
+        string[] calldata args,
+        uint64 subscriptionId,
+        uint32 gasLimit
+    ) public returns (bytes memory response, bytes memory error) {
+        IFunctionsConsumer(clFunctionsConsumerAddress).executeRequest(
+            source,
+            secrets,
+            secretsLocation,
+            args,
+            subscriptionId,
+            gasLimit
+        );
+        return (
+            IFunctionsConsumer(clFunctionsConsumerAddress)
+                .getLatestReponseAndError()
+        );
+    }
 }
