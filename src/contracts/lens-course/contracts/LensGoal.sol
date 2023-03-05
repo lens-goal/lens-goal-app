@@ -20,6 +20,8 @@ pragma experimental ABIEncoderV2;
 import "./LensGoalHelpers.sol";
 import "./AutomationCompatible.sol";
 import "./AutomationCompatibleInterface.sol";
+import "./cl-functions/dev/functions/FunctionsClient.sol";
+import "./cl-functions/IFC.sol";
 
 contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     // wallet where funds will be transfered in case of goal failure
@@ -118,6 +120,13 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     // used to identify which charity the funds are sent to
     mapping(address => Charity) addressToCharity;
 
+    // LINK token address on polygon
+    // used for subscription renewals
+    address linkTokenAddress = 0x326C977E6efc84E512bB9C30f76E30c160eD06FB;
+    // address to which chainlink req. functions will be sent
+    // deploy FunctionsConsumer.sol before LensGoal.sol and input contract address in constructor
+    address clFunctionsConsumerAddress;
+
     // will be incremented when new goals/stakes are published
     uint256 goalId;
     uint256 stakeId;
@@ -183,6 +192,17 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
             "Giveth House",
             charities[2],
             true
+        );
+    }
+
+    function updateClFunctionsConsumerAddr(address newAddr) public onlyOwners {
+        clFunctionsConsumerAddress = newAddr;
+    }
+
+    // update chainlink oracle address
+    function updateOracleAddress(address oracle) external onlyOwners {
+        IFunctionsConsumer(clFunctionsConsumerAddress).updateOracleAddress(
+            oracle
         );
     }
 
@@ -676,5 +696,29 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         }
 
         return goalBasicInfos;
+    }
+
+    // Chainlink request fuction
+
+    function executeRequestAndGetReturns(
+        string calldata source,
+        bytes calldata secrets,
+        Functions.Location secretsLocation,
+        string[] calldata args,
+        uint64 subscriptionId,
+        uint32 gasLimit
+    ) public returns (bytes memory response, bytes memory error) {
+        IFunctionsConsumer(clFunctionsConsumerAddress).executeRequest(
+            source,
+            secrets,
+            secretsLocation,
+            args,
+            subscriptionId,
+            gasLimit
+        );
+        return (
+            IFunctionsConsumer(clFunctionsConsumerAddress)
+                .getLatestReponseAndError()
+        );
     }
 }
