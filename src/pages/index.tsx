@@ -30,11 +30,16 @@ export default function Home() {
   }
 
   return (
-    <div >
-      <div >
+    <div>
+      <div>
         <div className="flex align-middle">
           <div className="w-1/2">
-            <Image width={650} height={650} src='/heroimageLensGoal.png' alt=''></Image>  
+            <Image
+              width={650}
+              height={650}
+              src="/heroimageLensGoal.png"
+              alt=""
+            ></Image>
           </div>
           <div className="flex flex-col justify-center w-1/2 text-center">
             <h1 className="text-6xl mb-4">
@@ -42,28 +47,39 @@ export default function Home() {
               <br></br>
               where your goal is!
             </h1>
-            <span className="text-lg">Socially accountable goals, powered by your frens</span>
+            <span className="text-lg">
+              Socially accountable goals, powered by your frens
+            </span>
             <div className="mt-8">
-              <Link href="/goals/new-goal" className="bg-emerald-900 px-20 py-4 text-white rounded-lg">
+              <Link
+                href="/goals/new-goal"
+                className="bg-emerald-900 px-20 py-4 text-white rounded-lg"
+              >
                 Set your goal
               </Link>
             </div>
           </div>
-
         </div>
         <div className="relative">
-
-          <div style={{backgroundColor: "#ABFE2C", height: 900}}>
-
+          <div
+            className="flex"
+            style={{ backgroundColor: "#ABFE2C", height: 900 }}
+          >
+            <h2 className="text-7xl mt-96 ml-20">Incentivise Your Future</h2>
           </div>
-          <div style={{ height: 900}}>
-
+          <div style={{ height: 900 }}>
+            <h2 className="text-7xl mt-96 ml-80">
+              Make Your First Step Empower The Last
+            </h2>
           </div>
-          <div style={{backgroundColor: "#ABFE2C", height: 750}}>
-
-          </div>
+          <div style={{ backgroundColor: "#ABFE2C", height: 750 }}></div>
           <div className="absolute -top-10 left-0">
-            <Image width={1850} height={2953} src='/dottedLine.svg' alt=''></Image> 
+            <Image
+              width={1850}
+              height={2953}
+              src="/dottedLine.svg"
+              alt=""
+            ></Image>
           </div>
         </div>
       </div>
