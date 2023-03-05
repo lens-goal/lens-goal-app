@@ -6,22 +6,20 @@ export interface WhiteListedToken {
     symbol: string
 }
 
-// TODO: these are MUMBAI ADDRESSES
-// TODO: implement also MAINNET ADDRESSES
 export const whitelistedTokens: {[key:string]:WhiteListedToken} = {
     
     'LINK': {
-        address: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB',
+        address: '0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39',
         name: 'Chainlink Token',
         symbol: 'LINK'
     },
     'USDC': {
-        address: '0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747',
+        address: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
         name: 'USDC',
         symbol: 'USDC'
     },
     'DAI': {
-        address: '0xd393b1E02dA9831Ff419e22eA105aAe4c47E1253',
+        address: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
         name: 'DAI Stablecoin',
         symbol: 'DAI'
     },
@@ -29,11 +27,6 @@ export const whitelistedTokens: {[key:string]:WhiteListedToken} = {
         address: '0x9AFA555d4c42f3070baf77bdE27bd833D5383593',
         name: 'ABCToken',
         symbol: "ABC"
-    },
-    'DEF': {
-        address: '0x90508B34EfBdBe4FcAD51EA8e1167cb6e9dCc575',
-        name: 'DEFToken',
-        symbol: "DEF"
     },
 }
 

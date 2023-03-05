@@ -10,7 +10,7 @@ export default function Header() {
           <Link href="/goals/new-goal">My Goals</Link>
           <Link href="/goals/friends-goals">Frens Goals</Link>
           <Link href="/goals/group-goals">Group Goals</Link>
-          <Link href="/Evidence">Evidence</Link>
+          <Link href="/">Home</Link>
         </div>
         <div>
           <SignInButton />
