@@ -45,8 +45,8 @@ Future Implementations:
 - Utilize Superfluid for time based funding
 - Wager mechanism- allow others to bet against your success
  
-
-
+https://www.figma.com/file/WayaWINjYspHXz9987IBkq/Untitled-(Copy)?node-id=0%3A1&t=NcAsrX3KSPqONM2D-1
+https://lenstube.xyz/watch/0x89de-0x1e    
 
 How to build: 
 
