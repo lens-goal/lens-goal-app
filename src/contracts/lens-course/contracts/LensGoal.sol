@@ -27,21 +27,6 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
 
     address communityWallet;
 
-    address[] owners = [
-        0x2cF29308548E6E15056FA0C8dE1fd7087053e5Ae,
-        0x327def07a8e64E001E23a96E90955eDC091Ee066,
-        0x74B4B8C7cb9A594a6440965f982deF10BB9570b9
-    ];
-
-    modifier onlyOwners() {
-        require(
-            msg.sender == owners[0] ||
-                msg.sender == owners[1] ||
-                msg.sender == owners[2]
-        );
-        _;
-    }
-
     // used to identify whether stake is in ether or erc20
     enum TokenType {
         ETHER,
@@ -81,6 +66,7 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         uint256 deadline;
         Status status;
         uint256 goalId;
+        Charity charity;
     }
 
     struct Goal {
@@ -92,8 +78,9 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     }
 
     struct Charity {
-        address account;
         string name;
+        address charityAddress;
+        bool isValid;
     }
 
     struct AdditionalStake {
@@ -117,8 +104,19 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
     // maps goal to all stakeId of stakes for that goal
     mapping(uint256 => uint256[]) goalIdToStakeIds;
 
-    address[] public charityList;
-    mapping(address => Charity) public charityIdToCharity;
+    address[] owners = [
+        0x2cF29308548E6E15056FA0C8dE1fd7087053e5Ae,
+        0x327def07a8e64E001E23a96E90955eDC091Ee066,
+        0x74B4B8C7cb9A594a6440965f982deF10BB9570b9
+    ];
+    mapping(address => bool) isAddressOwner;
+    address[] charities = [
+        0x8718122A0c268ef5efeA7771E0e6217913fC0807,
+        0x10E1439455BD2624878b243819E31CfEE9eb721C,
+        0xB6989F472Bef8931e6Ca882b1f875539b7D5DA19
+    ];
+    // used to identify which charity the funds are sent to
+    mapping(address => Charity) addressToCharity;
 
     // will be incremented when new goals/stakes are published
     uint256 goalId;
@@ -160,10 +158,38 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
 
     event VoteCasted(address indexed _voter, bool _vote, uint256 _goalId);
 
+    modifier onlyOwners() {
+        require(isAddressOwner[msg.sender] == true);
+        _;
+    }
+
+    constructor() {
+        // define owner mapping
+        isAddressOwner[owners[0]] = true;
+        isAddressOwner[owners[1]] = true;
+        isAddressOwner[owners[2]] = true;
+        // define charities
+        addressToCharity[charities[0]] = Charity(
+            "Save the Children",
+            charities[0],
+            true
+        );
+        addressToCharity[charities[1]] = Charity(
+            "Unchain Ukraine",
+            charities[1],
+            true
+        );
+        addressToCharity[charities[2]] = Charity(
+            "Giveth House",
+            charities[2],
+            true
+        );
+    }
+
     function addCharity(address account, string calldata name) external {
-        if (charityIdToCharity[account].account == address(0)) {
-            charityList.push(account);
-            charityIdToCharity[account] = Charity(account, name);
+        if (addressToCharity[account].charityAddress == address(0)) {
+            charities.push(account);
+            addressToCharity[account] = Charity(name, account, true);
         }
     }
 
@@ -173,11 +199,11 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         onlyOwners
         returns (Charity[] memory)
     {
-        Charity[] memory charities = new Charity[](charityList.length);
-        for (uint256 i; i < charityList.length; i++) {
-            charities[i] = charityIdToCharity[charityList[i]];
+        Charity[] memory _charities = new Charity[](charities.length);
+        for (uint256 i; i < charities.length; i++) {
+            _charities[i] = addressToCharity[charities[i]];
         }
-        return charities;
+        return _charities;
     }
 
     // allows user to make a new goal
@@ -188,8 +214,11 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
         uint256 tokenAmount,
         address tokenAddress,
         uint256 timestampEnd,
-        string memory preProof
+        string memory preProof,
+        address charityAddress
     ) external payable {
+        // make sure charity is valid
+        require(addressToCharity[charityAddress].isValid == true);
         if (inEther) {
             // require(msg.value > 0, "msg.value must be greater than 0");
             // why user can stake nothing:
@@ -202,7 +231,8 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
                     verificationCriteria,
                     timestampEnd,
                     Status.PENDING,
-                    goalId
+                    goalId,
+                    addressToCharity[charityAddress]
                 ),
                 defaultEtherStake(),
                 Votes(0, 0),
@@ -238,7 +268,8 @@ contract LensGoal is LensGoalHelpers, AutomationCompatibleInterface {
                     verificationCriteria,
                     timestampEnd,
                     Status.PENDING,
-                    goalId
+                    goalId,
+                    addressToCharity[charityAddress]
                 ),
                 // get etherstake struct
                 defaultEtherStake(),
